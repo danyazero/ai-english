@@ -5,7 +5,7 @@ CREATE TABLE "public"."film"
     "year"  integer,
     PRIMARY KEY ("id")
 );
-CREATE TABLE "public"."user"
+CREATE TABLE "public"."users"
 (
     "id"       integer GENERATED ALWAYS AS IDENTITY,
     "username" text,
@@ -18,7 +18,7 @@ CREATE TABLE "public"."user_film"
     "user_id" integer,
     PRIMARY KEY ("id"),
     FOREIGN KEY ("film_id") REFERENCES "public"."film" ("id"),
-    FOREIGN KEY ("user_id") REFERENCES "public"."user" ("id")
+    FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id")
 );
 
 INSERT INTO "public"."film"("title", "year") VALUES('Dune', 2021) RETURNING "id", "title", "year";
@@ -27,7 +27,7 @@ INSERT INTO "public"."film"("title", "year") VALUES('The Boys', 2019) RETURNING 
 INSERT INTO "public"."film"("title", "year") VALUES('Stranger Things', 2016) RETURNING "id", "title", "year";
 INSERT INTO "public"."film"("title", "year") VALUES('House M.D.', 2004) RETURNING "id", "title", "year";
 
-INSERT INTO "public"."user"("username") VALUES('danyazero') RETURNING "id", "username";
+INSERT INTO "public"."users"("username") VALUES('danyazero') RETURNING "id", "username";
 
 INSERT INTO "public"."user_film"("film_id", "user_id") VALUES(2, 1) RETURNING "id", "film_id", "user_id";
 INSERT INTO "public"."user_film"("film_id", "user_id") VALUES(4, 1) RETURNING "id", "film_id", "user_id";
