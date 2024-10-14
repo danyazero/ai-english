@@ -6,22 +6,22 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@Entity(name = "user_film")
-public class UserFilm {
+@Entity(name = "user_theme")
+public class UserTheme {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @ManyToOne
-    @JoinColumn(name = "film_id")
-    private Film film;
+    @JoinColumn(name = "theme_id")
+    private Theme theme;
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    public UserFilm() {}
+    public UserTheme() {}
 
-    public UserFilm(Film film, User user) {
-        this.film = film;
+    public UserTheme(Theme film, User user) {
+        this.theme = film;
         this.user = user;
     }
 }

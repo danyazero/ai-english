@@ -1,6 +1,6 @@
 package org.zero.aienglish.model;
 
-public interface FilmDTO {
+public interface ThemeDTO {
     Integer getId();
     String getTitle();
     Integer getYear();
