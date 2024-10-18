@@ -12,8 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Table(name = "vocabulary")
 public class Vocabulary {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "vocabulary_id_gen")
-    @SequenceGenerator(name = "vocabulary_id_gen", sequenceName = "vocabulary_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 

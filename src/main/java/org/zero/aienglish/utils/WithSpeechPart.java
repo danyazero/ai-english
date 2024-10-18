@@ -14,29 +14,33 @@ import java.util.function.BiFunction;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GetVocabularyWithSpeechPart implements BiFunction<WordDTO, List<SpeechPart>, Vocabulary> {
+public class WithSpeechPart implements BiFunction<WordDTO, List<SpeechPart>, Vocabulary> {
     private final WordMapper wordMapper;
     private final SetSpeechPart setSpeechPart;
 
     @Override
     public Vocabulary apply(WordDTO currentWord, List<SpeechPart> speechPartList) {
         log.info(
-                "Current word: {}, with speech part: {}, in list: {}",
-                currentWord.word(),
-                currentWord.speechPart(),
-                speechPartList.stream().map(SpeechPart::getTitle).toList()
+                "Current word: {}, with speech part: {}",
+                currentWord.getWord(),
+                currentWord.getSpeechPart()
         );
         var currentSpeechPart = speechPartList.stream()
-                .filter(speechPart -> speechPart.getTitle().equals(currentWord.speechPart()))
+                .filter(speechPart -> isTitleEquals(currentWord, speechPart))
                 .findFirst();
+
         if (currentSpeechPart.isEmpty()) {
-            log.info("Speech part not found: {}", currentWord.speechPart());
+            log.info("Speech part not found: {}", currentWord.getSpeechPart());
             return null;
         };
 
-        log.info("Speech part found: {}", currentWord.speechPart());
+        log.info("Speech part found: {}", currentWord.getSpeechPart());
         var mappedWord = wordMapper.map(currentWord);
         return setSpeechPart.apply(mappedWord, currentSpeechPart.get());
 
+    }
+
+    private static boolean isTitleEquals(WordDTO currentWord, SpeechPart speechPart) {
+        return speechPart.getTitle().equalsIgnoreCase(currentWord.getSpeechPart());
     }
 }

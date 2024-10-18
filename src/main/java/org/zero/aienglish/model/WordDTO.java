@@ -1,8 +1,14 @@
 package org.zero.aienglish.model;
 
-public record WordDTO(
-        String word,
-        String translate,
-        String speechPart
-) {
+import lombok.*;
+
+@Setter
+@Getter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+public class WordDTO {
+        private String word;
+        private String translate;
+        private String speechPart;
 }

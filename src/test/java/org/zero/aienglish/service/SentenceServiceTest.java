@@ -15,22 +15,35 @@ import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.SpeechRepository;
 import org.zero.aienglish.repository.VocabularyRepository;
 import org.zero.aienglish.repository.VocabularySentenceRepository;
-import org.zero.aienglish.utils.GetVocabularyWithSpeechPart;
+import org.zero.aienglish.utils.NotExist;
+import org.zero.aienglish.utils.TitleCaseWord;
+import org.zero.aienglish.utils.WithSpeechPart;
 import org.zero.aienglish.utils.SetSpeechPart;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SentenceServiceTest {
-    @Mock private WordMapper wordMapper;
-    @Mock private SetSpeechPart setSpeechPart;
-    @Mock private SpeechRepository speechRepository;
-    @Mock private VocabularyRepository vocabularyRepository;
-    @Mock private VocabularySentenceRepository vocabularySentenceRepository;
-    @Mock GetVocabularyWithSpeechPart getVocabularyWithSpeechPart;
+    @Mock
+    private NotExist notExist;
+    @Mock
+    private TitleCaseWord titleCaseWord;
+    @Mock
+    private WordMapper wordMapper;
+    @Mock
+    private SetSpeechPart setSpeechPart;
+    @Mock
+    private SpeechRepository speechRepository;
+    @Mock
+    private WithSpeechPart getVocabularyWithSpeechPart;
+    @Mock
+    private VocabularyRepository vocabularyRepository;
+    @Mock
+    private VocabularySentenceRepository vocabularySentenceRepository;
 
     @InjectMocks
     private SentenceService sentenceService;
@@ -41,18 +54,24 @@ class SentenceServiceTest {
     private WordDTO wordSecond;
     private SpeechPart speechPartObjectFirst;
     private SpeechPart speechPartObjectSecond;
-    private Vocabulary mappedWordFirst;
-    private Vocabulary mappedWordSecond;
+    private Vocabulary vocabularyFirst;
+    private Vocabulary vocabularySecond;
+    private Vocabulary vocabularyFirstTitle;
+    private Vocabulary vocabularySecondTitle;
 
     @BeforeEach
     void setUp() {
-        wordFirst = new WordDTO("test", "test_translated", speechPartFirst);
-        wordSecond = new WordDTO("test_1", "test_translated_1", speechPartSecond);
+        wordFirst = new WordDTO("Test", "test_translated", speechPartFirst);
+        wordSecond = new WordDTO("Test_1", "test_translated_1", speechPartSecond);
 
         speechPartObjectFirst = new SpeechPart(1, speechPartFirst, speechPartFirst, speechPartFirst);
         speechPartObjectSecond = new SpeechPart(2, speechPartSecond, speechPartSecond, speechPartSecond);
-        mappedWordFirst = new Vocabulary(null, "test", "test_translated", null, speechPartObjectFirst);
-        mappedWordSecond = new Vocabulary(null, "test_1", "test_translated_1", null, speechPartObjectSecond);
+
+        vocabularyFirst = new Vocabulary(null, "test", "test_translated", null, speechPartObjectFirst);
+        vocabularySecond = new Vocabulary(null, "test_1", "test_translated_1", null, speechPartObjectSecond);
+
+        vocabularyFirstTitle = new Vocabulary(null, "Test", "Test_translated", null, speechPartObjectFirst);
+        vocabularySecondTitle = new Vocabulary(null, "Test_1", "Test_translated_1", null, speechPartObjectSecond);
     }
 
     @Test
@@ -65,16 +84,47 @@ class SentenceServiceTest {
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
-        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(mappedWordFirst);
-        when(getVocabularyWithSpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(mappedWordSecond);
+        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(List.of());
+        when(notExist.apply(any(), any())).thenReturn(true);
 
-        var result = sentenceService.getWordList(wordList);
+        when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
+        when(titleCaseWord.apply(vocabularySecond)).thenReturn(vocabularySecondTitle);
 
+        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
+        when(getVocabularyWithSpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(vocabularySecond);
+
+        var result = sentenceService.getVocabularyList(wordList);
+
+        Assertions.assertEquals(wordList.size(), result.size());
         Assertions.assertEquals(result.getFirst().getSpeechPart().getId(), speechPartObjectFirst.getId());
         Assertions.assertEquals(result.getFirst().getSpeechPart().getTitle(), speechPartObjectFirst.getTitle());
         Assertions.assertEquals(result.get(1).getSpeechPart().getId(), speechPartObjectSecond.getId());
-        Assertions.assertEquals(wordList.size(), result.size());
     }
+
+    @Test
+    void addWordList_WithAlreadyExist() {
+        var wordList = List.of(wordFirst, wordSecond);
+        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+
+        var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
+        String[] speechPartArray = speechPartList.toArray(new String[0]);
+        List<Vocabulary> alreadySavedList = List.of(vocabularySecond);
+
+
+        when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
+        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(alreadySavedList);
+        when(notExist.apply(alreadySavedList, wordFirst)).thenReturn(true);
+        when(notExist.apply(alreadySavedList, wordSecond)).thenReturn(false);
+        when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
+        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
+
+        var result = sentenceService.getVocabularyList(wordList);
+
+        Assertions.assertEquals(result.getFirst().getSpeechPart().getId(), speechPartObjectFirst.getId());
+        Assertions.assertEquals(result.getFirst().getSpeechPart().getTitle(), speechPartObjectFirst.getTitle());
+        Assertions.assertEquals(wordList.size() - 1, result.size());
+    }
+
 
     @Test
     void addWordList_SuccessWithInvalidSpeechPart() {
@@ -86,10 +136,14 @@ class SentenceServiceTest {
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
-        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(mappedWordFirst);
+        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(List.of());
+        when(notExist.apply(any(), any())).thenReturn(true);
+
+        when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
+        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
         when(getVocabularyWithSpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(null);
 
-        var result = sentenceService.getWordList(wordList);
+        var result = sentenceService.getVocabularyList(wordList);
 
         Assertions.assertEquals(result.getFirst().getSpeechPart().getId(), speechPartObjectFirst.getId());
         Assertions.assertEquals(result.getFirst().getSpeechPart().getTitle(), speechPartObjectFirst.getTitle());
@@ -106,6 +160,6 @@ class SentenceServiceTest {
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(List.of());
 
-        Assertions.assertThrows(RequestException.class, () -> sentenceService.getWordList(wordList));
+        Assertions.assertThrows(RequestException.class, () -> sentenceService.getVocabularyList(wordList));
     }
 }

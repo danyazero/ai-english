@@ -2,16 +2,17 @@ package org.zero.aienglish.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
 @Table(name = "vocabulary_sentence")
 public class VocabularySentence {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "vocabulary_sentence_id_gen")
-    @SequenceGenerator(name = "vocabulary_sentence_id_gen", sequenceName = "vocabulary_sentence_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
@@ -23,4 +24,8 @@ public class VocabularySentence {
     @JoinColumn(name = "vocabulary_id", nullable = false)
     private Vocabulary vocabulary;
 
+    public VocabularySentence(Sentence sentence, Vocabulary vocabulary) {
+        this.sentence = sentence;
+        this.vocabulary = vocabulary;
+    }
 }
