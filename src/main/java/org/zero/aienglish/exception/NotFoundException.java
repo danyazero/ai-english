@@ -3,9 +3,9 @@ package org.zero.aienglish.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.BAD_REQUEST)
-public class RequestException extends RuntimeException {
-    public RequestException(String message) {
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class NotFoundException extends RequestException {
+    public NotFoundException(String message) {
         super(message);
     }
 }

@@ -6,9 +6,11 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.zero.aienglish.entity.*;
+import org.zero.aienglish.exception.NotFoundException;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.SentenceMapper;
 import org.zero.aienglish.model.SentenceDTO;
+import org.zero.aienglish.model.TenseDTO;
 import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.*;
 import org.zero.aienglish.utils.NotExist;
@@ -28,21 +30,20 @@ public class SentenceService {
     private final WithSpeechPart withSpeechPart;
     private final SentenceMapper sentenceMapper;
     private final ThemeRepository themeRepository;
+    private final TenseRepository tenseRepository;
     private final SpeechRepository speechRepository;
     private final SentenceRepository sentenceRepository;
     private final VocabularyRepository vocabularyRepository;
+    private final SentenceTenseRepository sentenceTenseRepository;
     private final VocabularySentenceRepository vocabularySentenceRepository;
 
 
     @Transactional
     public void addSentence(SentenceDTO sentence, List<WordDTO> wordList) {
         log.info("Sentence: {}, word list: {}", sentence, wordList);
-        var theme = getThemeIdExist(sentence);
-
-        Optional.ofNullable(sentence.sentence()).map(sentenceRepository::findFirstBySentenceLikeIgnoreCase)
-                .ifPresent(s -> {
-                    throw new RequestException("Sentence already exists");
-                });
+        var theme = getThemeIfExist(sentence);
+        var tense = getTenseIfExist(sentence);
+        isSentenceAlreadyExists(sentence);
 
         var mappedSentence = sentenceMapper.map(sentence);
 
@@ -53,16 +54,36 @@ public class SentenceService {
                     throw new RequestException("Theme not found");
                 });
 
+
         var vocabularyList = getVocabularyList(wordList);
 
         var sentenceSaved = sentenceRepository.save(mappedSentence);
         log.info("Saved sentence: {}", sentenceSaved.getSentence());
+
+        var tenseReferanceList = tense.stream()
+                .map(t -> tenseRepository.getReferenceById(t.getId()))
+                .map(t -> new SentenceTense(t, sentenceSaved))
+                .toList();
+        log.info("Sentence include {} tenses", tenseReferanceList.size());
+        sentenceTenseRepository.saveAll(tenseReferanceList);
 
         var vocabularyListSaved = vocabularyRepository.saveAll(vocabularyList);
         log.info("Saved vocabulary list: {}", vocabularyListSaved.stream().map(Vocabulary::getWord).toList());
 
         var vocabularySentenceList = getVocabularySentenceList(vocabularyListSaved, sentenceSaved);
         vocabularySentenceRepository.saveAll(vocabularySentenceList);
+    }
+
+    private void isSentenceAlreadyExists(SentenceDTO sentence) {
+        Optional.ofNullable(sentence.sentence()).map(sentenceRepository::findFirstBySentenceLikeIgnoreCase)
+                .ifPresent(s -> {
+                    s.ifPresent(sen -> { throw new RequestException("Sentence already exists"); });
+                });
+    }
+
+    private List<TenseDTO> getTenseIfExist(SentenceDTO sentence) {
+        return Optional.ofNullable(sentence.tenseList())
+                .map(tenseRepository::getTenseListByTitle).orElseThrow(() -> new NotFoundException("Tense not found"));
     }
 
     public List<Vocabulary> getVocabularyList(List<WordDTO> wordList) {
@@ -98,7 +119,7 @@ public class SentenceService {
         return wordList.stream().map(WordDTO::getWord).toArray(String[]::new);
     }
 
-    private Optional<Theme> getThemeIdExist(SentenceDTO sentence) {
+    private Optional<Theme> getThemeIfExist(SentenceDTO sentence) {
         return Optional.ofNullable(sentence.theme())
                 .map(themeRepository::findById).orElseThrow(() -> new RequestException("Theme not found"));
     }

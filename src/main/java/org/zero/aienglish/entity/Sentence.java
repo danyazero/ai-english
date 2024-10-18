@@ -33,5 +33,4 @@ public class Sentence {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "theme", nullable = false)
     private Theme theme;
-
 }
