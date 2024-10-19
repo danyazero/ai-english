@@ -10,8 +10,8 @@ import org.zero.aienglish.model.WordDTO;
 import java.util.ArrayList;
 import java.util.List;
 
-class NotExistTest {
-    private NotExist function;
+class WordNotExistTest {
+    private WordNotExist function;
     private WordDTO savedWordNoun;
     private WordDTO savedWordVerb;
     private WordDTO notSavedWord;
@@ -19,7 +19,7 @@ class NotExistTest {
 
     @BeforeEach
     void setUp() {
-        function = new NotExist();
+        function = new WordNotExist();
 
         savedWordNoun = new WordDTO("test", "test", "Noun");
         savedWordVerb = new WordDTO("test", "test", "Verb");

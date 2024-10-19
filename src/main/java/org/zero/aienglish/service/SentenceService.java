@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
+import org.springframework.validation.annotation.Validated;
 import org.zero.aienglish.entity.*;
+import org.zero.aienglish.exception.DataIncorrectException;
 import org.zero.aienglish.exception.NotFoundException;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.SentenceMapper;
@@ -13,9 +16,9 @@ import org.zero.aienglish.model.SentenceDTO;
 import org.zero.aienglish.model.TenseDTO;
 import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.*;
-import org.zero.aienglish.utils.NotExist;
+import org.zero.aienglish.utils.WordNotExist;
 import org.zero.aienglish.utils.TitleCaseWord;
-import org.zero.aienglish.utils.WithSpeechPart;
+import org.zero.aienglish.utils.SpeechPart;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,9 +28,10 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class SentenceService {
-    private final NotExist notExist;
+    private final WordNotExist wordNotExist;
+    private final Validator validator;
     private final TitleCaseWord titleCaseWord;
-    private final WithSpeechPart withSpeechPart;
+    private final SpeechPart speechPart;
     private final SentenceMapper sentenceMapper;
     private final ThemeRepository themeRepository;
     private final TenseRepository tenseRepository;
@@ -39,7 +43,14 @@ public class SentenceService {
 
 
     @Transactional
-    public void addSentence(SentenceDTO sentence, List<WordDTO> wordList) {
+    public void addSentence(@Validated SentenceDTO sentence, List<WordDTO> wordList) {
+
+        var validationResult = validator.validateObject(sentence);
+        if (validationResult.hasErrors()) {
+            log.warn("Provided sentence with incorrect data");
+            throw new DataIncorrectException("Sentence provided with incorrect data");
+        }
+
         log.info("Sentence: {}, word list: {}", sentence, wordList);
         var theme = getThemeIfExist(sentence);
         var tense = getTenseIfExist(sentence);
@@ -60,10 +71,7 @@ public class SentenceService {
         var sentenceSaved = sentenceRepository.save(mappedSentence);
         log.info("Saved sentence: {}", sentenceSaved.getSentence());
 
-        var tenseReferanceList = tense.stream()
-                .map(t -> tenseRepository.getReferenceById(t.getId()))
-                .map(t -> new SentenceTense(t, sentenceSaved))
-                .toList();
+        var tenseReferanceList = getTenseReferenceList(tense, sentenceSaved);
         log.info("Sentence include {} tenses", tenseReferanceList.size());
         sentenceTenseRepository.saveAll(tenseReferanceList);
 
@@ -72,18 +80,6 @@ public class SentenceService {
 
         var vocabularySentenceList = getVocabularySentenceList(vocabularyListSaved, sentenceSaved);
         vocabularySentenceRepository.saveAll(vocabularySentenceList);
-    }
-
-    private void isSentenceAlreadyExists(SentenceDTO sentence) {
-        Optional.ofNullable(sentence.sentence()).map(sentenceRepository::findFirstBySentenceLikeIgnoreCase)
-                .ifPresent(s -> {
-                    s.ifPresent(sen -> { throw new RequestException("Sentence already exists"); });
-                });
-    }
-
-    private List<TenseDTO> getTenseIfExist(SentenceDTO sentence) {
-        return Optional.ofNullable(sentence.tenseList())
-                .map(tenseRepository::getTenseListByTitle).orElseThrow(() -> new NotFoundException("Tense not found"));
     }
 
     public List<Vocabulary> getVocabularyList(List<WordDTO> wordList) {
@@ -102,10 +98,27 @@ public class SentenceService {
         var alreadyExistedWords = vocabularyRepository.findAllByWord(wordArray);
 
         return wordList.stream()
-                .filter(word -> notExist.apply(alreadyExistedWords, word))
-                .map(element -> withSpeechPart.apply(element, speechPartList))
+                .filter(word -> wordNotExist.apply(alreadyExistedWords, word))
+                .map(element -> speechPart.apply(element, speechPartList))
                 .filter(Objects::nonNull)
                 .map(titleCaseWord)
+                .toList();
+    }
+
+    private void isSentenceAlreadyExists(SentenceDTO sentence) {
+        sentenceRepository.findFirstBySentenceLikeIgnoreCase(sentence.sentence())
+                .ifPresent(s -> { throw new RequestException("Sentence already exists"); });
+    }
+
+    private List<TenseDTO> getTenseIfExist(SentenceDTO sentence) {
+        return Optional.ofNullable(sentence.tenseList())
+                .map(tenseRepository::getTenseListByTitle).orElseThrow(() -> new NotFoundException("Tense not found"));
+    }
+
+    private List<SentenceTense> getTenseReferenceList(List<TenseDTO> tense, Sentence sentenceSaved) {
+        return tense.stream()
+                .map(t -> tenseRepository.getReferenceById(t.getId()))
+                .map(t -> new SentenceTense(t, sentenceSaved))
                 .toList();
     }
 
@@ -120,7 +133,7 @@ public class SentenceService {
     }
 
     private Optional<Theme> getThemeIfExist(SentenceDTO sentence) {
-        return Optional.ofNullable(sentence.theme())
+        return Optional.of(sentence.theme())
                 .map(themeRepository::findById).orElseThrow(() -> new RequestException("Theme not found"));
     }
 

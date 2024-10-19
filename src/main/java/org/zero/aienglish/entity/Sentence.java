@@ -27,9 +27,6 @@ public class Sentence {
     @Column(name = "translate", nullable = false, length = Integer.MAX_VALUE)
     private String translate;
 
-    @Column(name = "\"grammar_task\"", nullable = false, length = Integer.MAX_VALUE)
-    private String grammarTask;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "theme", nullable = false)
     private Theme theme;

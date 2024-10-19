@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.SpeechPart;
 import org.zero.aienglish.entity.Vocabulary;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.WordMapper;
@@ -15,9 +14,9 @@ import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.SpeechRepository;
 import org.zero.aienglish.repository.VocabularyRepository;
 import org.zero.aienglish.repository.VocabularySentenceRepository;
-import org.zero.aienglish.utils.NotExist;
+import org.zero.aienglish.utils.WordNotExist;
 import org.zero.aienglish.utils.TitleCaseWord;
-import org.zero.aienglish.utils.WithSpeechPart;
+import org.zero.aienglish.utils.SpeechPart;
 import org.zero.aienglish.utils.SetSpeechPart;
 
 import java.util.Arrays;
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SentenceServiceTest {
     @Mock
-    private NotExist notExist;
+    private WordNotExist wordNotExist;
     @Mock
     private TitleCaseWord titleCaseWord;
     @Mock
@@ -39,7 +38,7 @@ class SentenceServiceTest {
     @Mock
     private SpeechRepository speechRepository;
     @Mock
-    private WithSpeechPart getVocabularyWithSpeechPart;
+    private SpeechPart getVocabularySpeechPart;
     @Mock
     private VocabularyRepository vocabularyRepository;
     @Mock
@@ -52,8 +51,8 @@ class SentenceServiceTest {
     private final String speechPartSecond = "Verb";
     private WordDTO wordFirst;
     private WordDTO wordSecond;
-    private SpeechPart speechPartObjectFirst;
-    private SpeechPart speechPartObjectSecond;
+    private org.zero.aienglish.entity.SpeechPart speechPartObjectFirst;
+    private org.zero.aienglish.entity.SpeechPart speechPartObjectSecond;
     private Vocabulary vocabularyFirst;
     private Vocabulary vocabularySecond;
     private Vocabulary vocabularyFirstTitle;
@@ -64,8 +63,8 @@ class SentenceServiceTest {
         wordFirst = new WordDTO("Test", "test_translated", speechPartFirst);
         wordSecond = new WordDTO("Test_1", "test_translated_1", speechPartSecond);
 
-        speechPartObjectFirst = new SpeechPart(1, speechPartFirst, speechPartFirst, speechPartFirst);
-        speechPartObjectSecond = new SpeechPart(2, speechPartSecond, speechPartSecond, speechPartSecond);
+        speechPartObjectFirst = new org.zero.aienglish.entity.SpeechPart(1, speechPartFirst, speechPartFirst, speechPartFirst);
+        speechPartObjectSecond = new org.zero.aienglish.entity.SpeechPart(2, speechPartSecond, speechPartSecond, speechPartSecond);
 
         vocabularyFirst = new Vocabulary(null, "test", "test_translated", null, speechPartObjectFirst);
         vocabularySecond = new Vocabulary(null, "test_1", "test_translated_1", null, speechPartObjectSecond);
@@ -77,7 +76,7 @@ class SentenceServiceTest {
     @Test
     void addWordList_Success() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+        List<org.zero.aienglish.entity.SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
@@ -85,13 +84,13 @@ class SentenceServiceTest {
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
         when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(List.of());
-        when(notExist.apply(any(), any())).thenReturn(true);
+        when(wordNotExist.apply(any(), any())).thenReturn(true);
 
         when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
         when(titleCaseWord.apply(vocabularySecond)).thenReturn(vocabularySecondTitle);
 
-        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
-        when(getVocabularyWithSpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(vocabularySecond);
+        when(getVocabularySpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
+        when(getVocabularySpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(vocabularySecond);
 
         var result = sentenceService.getVocabularyList(wordList);
 
@@ -104,7 +103,7 @@ class SentenceServiceTest {
     @Test
     void addWordList_WithAlreadyExist() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+        List<org.zero.aienglish.entity.SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
@@ -113,10 +112,10 @@ class SentenceServiceTest {
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
         when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(alreadySavedList);
-        when(notExist.apply(alreadySavedList, wordFirst)).thenReturn(true);
-        when(notExist.apply(alreadySavedList, wordSecond)).thenReturn(false);
+        when(wordNotExist.apply(alreadySavedList, wordFirst)).thenReturn(true);
+        when(wordNotExist.apply(alreadySavedList, wordSecond)).thenReturn(false);
         when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
-        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
+        when(getVocabularySpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
 
         var result = sentenceService.getVocabularyList(wordList);
 
@@ -129,7 +128,7 @@ class SentenceServiceTest {
     @Test
     void addWordList_SuccessWithInvalidSpeechPart() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst);
+        List<org.zero.aienglish.entity.SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
@@ -137,11 +136,11 @@ class SentenceServiceTest {
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
         when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(List.of());
-        when(notExist.apply(any(), any())).thenReturn(true);
+        when(wordNotExist.apply(any(), any())).thenReturn(true);
 
         when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
-        when(getVocabularyWithSpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
-        when(getVocabularyWithSpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(null);
+        when(getVocabularySpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
+        when(getVocabularySpeechPart.apply(wordSecond, speechPartObjectList)).thenReturn(null);
 
         var result = sentenceService.getVocabularyList(wordList);
 

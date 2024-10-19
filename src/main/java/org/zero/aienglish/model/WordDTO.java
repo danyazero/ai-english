@@ -9,6 +9,9 @@ import lombok.*;
 @AllArgsConstructor
 public class WordDTO {
         private String word;
+        private Short order;
+        private String sentenceForm;
         private String translate;
         private String speechPart;
+        private Boolean isMarker;
 }

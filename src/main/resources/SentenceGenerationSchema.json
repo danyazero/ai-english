@@ -1,0 +1,34 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "sentences_generation",
+    "schema": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sentence": {"type": "string"},
+          "translation": {"type": "string"},
+          "vocabulary": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "order": {"type": "number"},
+                "word": {"type": "string"},
+                "defaultWord": {"type": "string"},
+                "translate": {"type": "string"},
+                "speechPart": {"type": "string"},
+                "isMarker": {"type": "boolean"}
+              },
+              "required": ["order", "word", "defaultWord", "translate", "speechPart", "isMarker"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["sentence", "translation", "vocabulary"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

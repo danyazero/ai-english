@@ -13,6 +13,6 @@ public interface SentenceMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "theme", ignore = true)
-    @Mapping(target = "views", ignore = true)
+    @Mapping(target = "views", defaultValue = "0", ignore = true)
     Sentence map(SentenceDTO sentenceDTO);
 }

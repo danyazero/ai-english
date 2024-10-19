@@ -10,7 +10,7 @@ import java.util.function.BiFunction;
 
 @Component
 @RequiredArgsConstructor
-public class NotExist implements BiFunction<List<Vocabulary>, WordDTO, Boolean> {
+public class WordNotExist implements BiFunction<List<Vocabulary>, WordDTO, Boolean> {
     @Override
     public Boolean apply(List<Vocabulary> alreadyExistedWords, WordDTO currentWord) {
         return alreadyExistedWords.stream()
