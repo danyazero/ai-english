@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @Entity(name = "theme")
@@ -16,4 +18,6 @@ public class Theme {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+    @Column(name = "last_update")
+    private Instant lastUpdate = Instant.now();
 }

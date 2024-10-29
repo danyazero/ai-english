@@ -30,7 +30,7 @@ class SpeechPartTest {
     private SpeechRepository speechRepository;
 
     @InjectMocks
-    private SpeechPart speechPart;
+    private SpeechPart speechPartSer;
 
     private WordDTO currentWord;
     private Vocabulary currentVocabulary;
@@ -51,11 +51,11 @@ class SpeechPartTest {
         speechPartSecond = new org.zero.aienglish.entity.SpeechPart(2, "Pronoun", "test", "test");
         unknownSpeechPart = new org.zero.aienglish.entity.SpeechPart(3, "Unknown", "test", "test");
 
-        currentWord = new WordDTO("test", "test", "Noun");
+        currentWord = new WordDTO("test", (short) 0, "test", "test", "Noun", false);
         currentVocabulary = new Vocabulary(1, "test", "test", 0, null);
         currentVocabularyWith = new Vocabulary(1, "test", "test", 0, speechPart);
 
-        currentIncorrectWord = new WordDTO("test", "test", "Incorrectoun");
+        currentIncorrectWord = new WordDTO("test", (short) 0, "test", "test", "Incorrectoun", false);
         currentIncorrectVocabulary = new Vocabulary(2, "test", "test", 0, null);
         currentIncorrectVocabularyUnknown = new Vocabulary(2, "test", "test", 0, unknownSpeechPart);
 
@@ -71,7 +71,8 @@ class SpeechPartTest {
         when(wordMapper.map(currentWord)).thenReturn(currentVocabulary);
         when(setSpeechPart.apply(currentVocabulary, speechPart)).thenReturn(currentVocabularyWith);
 
-        var result = speechPart.apply(currentWord, speechPartList);
+        var result = speechPartSer.apply(currentWord, speechPartList);
+        System.out.println(result.getSpeechPart().getTitle());
 
         Assertions.assertEquals(speechPart, result.getSpeechPart());
     }
@@ -82,7 +83,7 @@ class SpeechPartTest {
         when(speechRepository.getReferenceById(1)).thenReturn(unknownSpeechPart);
         when(setSpeechPart.apply(currentIncorrectVocabulary, unknownSpeechPart)).thenReturn(currentIncorrectVocabularyUnknown);
 
-        var result = speechPart.apply(currentIncorrectWord, speechPartList);
+        var result = speechPartSer.apply(currentIncorrectWord, speechPartList);
 
         Assertions.assertEquals(result.getSpeechPart(), unknownSpeechPart);
     }
@@ -91,7 +92,7 @@ class SpeechPartTest {
     void withSpeechPartTest_WithIncorrectSpeechPartWithoutNullObject() {
         when(speechRepository.getReferenceById(1)).thenReturn(null);
 
-        var result = speechPart.apply(currentIncorrectWord, speechPartList);
+        var result = speechPartSer.apply(currentIncorrectWord, speechPartList);
 
         assertNull(result);
     }

@@ -14,7 +14,6 @@ import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.SpeechRepository;
 import org.zero.aienglish.repository.VocabularyRepository;
 import org.zero.aienglish.repository.VocabularySentenceRepository;
-import org.zero.aienglish.utils.WordNotExist;
 import org.zero.aienglish.utils.TitleCaseWord;
 import org.zero.aienglish.utils.SpeechPart;
 import org.zero.aienglish.utils.SetSpeechPart;
@@ -27,8 +26,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SentenceServiceTest {
-    @Mock
-    private WordNotExist wordNotExist;
     @Mock
     private TitleCaseWord titleCaseWord;
     @Mock
@@ -60,8 +57,8 @@ class SentenceServiceTest {
 
     @BeforeEach
     void setUp() {
-        wordFirst = new WordDTO("Test", "test_translated", speechPartFirst);
-        wordSecond = new WordDTO("Test_1", "test_translated_1", speechPartSecond);
+        wordFirst = new WordDTO("Test", (short) 0, "Test", "test_translated", speechPartFirst, false);
+        wordSecond = new WordDTO("Test_1", (short) 1, "Test", "test_translated_1", speechPartSecond, false);
 
         speechPartObjectFirst = new org.zero.aienglish.entity.SpeechPart(1, speechPartFirst, speechPartFirst, speechPartFirst);
         speechPartObjectSecond = new org.zero.aienglish.entity.SpeechPart(2, speechPartSecond, speechPartSecond, speechPartSecond);
@@ -83,8 +80,7 @@ class SentenceServiceTest {
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
-        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(List.of());
-        when(wordNotExist.apply(any(), any())).thenReturn(true);
+        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getDefaultWord).toArray(String[]::new))).thenReturn(List.of());
 
         when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
         when(titleCaseWord.apply(vocabularySecond)).thenReturn(vocabularySecondTitle);
@@ -111,9 +107,7 @@ class SentenceServiceTest {
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
-        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(alreadySavedList);
-        when(wordNotExist.apply(alreadySavedList, wordFirst)).thenReturn(true);
-        when(wordNotExist.apply(alreadySavedList, wordSecond)).thenReturn(false);
+        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getDefaultWord).toArray(String[]::new))).thenReturn(alreadySavedList);
         when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
         when(getVocabularySpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);
 
@@ -135,8 +129,7 @@ class SentenceServiceTest {
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
-        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getWord).toArray(String[]::new))).thenReturn(List.of());
-        when(wordNotExist.apply(any(), any())).thenReturn(true);
+        when(vocabularyRepository.findAllByWord(wordList.stream().map(WordDTO::getDefaultWord).toArray(String[]::new))).thenReturn(List.of());
 
         when(titleCaseWord.apply(vocabularyFirst)).thenReturn(vocabularyFirstTitle);
         when(getVocabularySpeechPart.apply(wordFirst, speechPartObjectList)).thenReturn(vocabularyFirst);

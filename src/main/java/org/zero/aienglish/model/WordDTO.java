@@ -10,7 +10,7 @@ import lombok.*;
 public class WordDTO {
         private String word;
         private Short order;
-        private String sentenceForm;
+        private String defaultWord;
         private String translate;
         private String speechPart;
         private Boolean isMarker;

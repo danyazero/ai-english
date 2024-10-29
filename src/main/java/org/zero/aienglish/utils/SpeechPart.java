@@ -24,7 +24,7 @@ public class SpeechPart implements BiFunction<WordDTO, List<org.zero.aienglish.e
     public Vocabulary apply(WordDTO currentWord, List<org.zero.aienglish.entity.SpeechPart> speechPartList) {
         log.info(
                 "Current word: {}, with speech part: {}",
-                currentWord.getWord(),
+                currentWord.getDefaultWord(),
                 currentWord.getSpeechPart()
         );
 

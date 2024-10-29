@@ -16,7 +16,6 @@ import org.zero.aienglish.model.SentenceDTO;
 import org.zero.aienglish.model.TenseDTO;
 import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.*;
-import org.zero.aienglish.utils.WordNotExist;
 import org.zero.aienglish.utils.TitleCaseWord;
 import org.zero.aienglish.utils.SpeechPart;
 
@@ -28,7 +27,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class SentenceService {
-    private final WordNotExist wordNotExist;
     private final Validator validator;
     private final TitleCaseWord titleCaseWord;
     private final SpeechPart speechPart;
@@ -43,16 +41,17 @@ public class SentenceService {
 
 
     @Transactional
-    public void addSentence(@Validated SentenceDTO sentence, List<WordDTO> wordList) {
+    public void addSentence(@Validated SentenceDTO sentence, Integer themeId) {
+        log.info("Add sentence -> {}", sentence.sentence());
 
         var validationResult = validator.validateObject(sentence);
         if (validationResult.hasErrors()) {
-            log.warn("Provided sentence with incorrect data");
+            log.warn("Provided sentence with incorrect data -> {}", validationResult.getAllErrors());
             throw new DataIncorrectException("Sentence provided with incorrect data");
         }
 
-        log.info("Sentence: {}, word list: {}", sentence, wordList);
-        var theme = getThemeIfExist(sentence);
+        log.info("Sentence: {}, word list: {}", sentence, sentence.vocabulary());
+        var theme = getThemeIfExist(themeId);
         var tense = getTenseIfExist(sentence);
         isSentenceAlreadyExists(sentence);
 
@@ -66,7 +65,8 @@ public class SentenceService {
                 });
 
 
-        var vocabularyList = getVocabularyList(wordList);
+        var vocabularyList = getVocabularyList(sentence.vocabulary());
+        log.info("Getted vocabulary list size -> {}", vocabularyList.size());
 
         var sentenceSaved = sentenceRepository.save(mappedSentence);
         log.info("Saved sentence: {}", sentenceSaved.getSentence());
@@ -78,7 +78,7 @@ public class SentenceService {
         var vocabularyListSaved = vocabularyRepository.saveAll(vocabularyList);
         log.info("Saved vocabulary list: {}", vocabularyListSaved.stream().map(Vocabulary::getWord).toList());
 
-        var vocabularySentenceList = getVocabularySentenceList(vocabularyListSaved, sentenceSaved);
+        var vocabularySentenceList = getVocabularySentenceList(vocabularyListSaved, sentenceSaved, sentence.vocabulary());
         vocabularySentenceRepository.saveAll(vocabularySentenceList);
     }
 
@@ -98,11 +98,22 @@ public class SentenceService {
         var alreadyExistedWords = vocabularyRepository.findAllByWord(wordArray);
 
         return wordList.stream()
-                .filter(word -> wordNotExist.apply(alreadyExistedWords, word))
+                .filter(word -> wordExistCheck(alreadyExistedWords, word))
                 .map(element -> speechPart.apply(element, speechPartList))
                 .filter(Objects::nonNull)
                 .map(titleCaseWord)
                 .toList();
+    }
+
+    private Boolean wordExistCheck(
+            List<Vocabulary> alreadyExistedWords,
+            WordDTO currentWord
+    ) {
+            return alreadyExistedWords.stream()
+                    .noneMatch(element ->
+                            element.getWord().equalsIgnoreCase(currentWord.getDefaultWord())
+                                    && element.getSpeechPart().getTitle().equalsIgnoreCase(currentWord.getSpeechPart()));
+
     }
 
     private void isSentenceAlreadyExists(SentenceDTO sentence) {
@@ -111,7 +122,7 @@ public class SentenceService {
     }
 
     private List<TenseDTO> getTenseIfExist(SentenceDTO sentence) {
-        return Optional.ofNullable(sentence.tenseList())
+        return Optional.ofNullable(sentence.sentenceTense())
                 .map(tenseRepository::getTenseListByTitle).orElseThrow(() -> new NotFoundException("Tense not found"));
     }
 
@@ -129,20 +140,41 @@ public class SentenceService {
     }
 
     private static String[] getWordArray(List<WordDTO> wordList) {
-        return wordList.stream().map(WordDTO::getWord).toArray(String[]::new);
+        return wordList.stream().map(WordDTO::getDefaultWord).toArray(String[]::new);
     }
 
-    private Optional<Theme> getThemeIfExist(SentenceDTO sentence) {
-        return Optional.of(sentence.theme())
+    private Optional<Theme> getThemeIfExist(Integer themeId) {
+        return Optional.of(themeId)
                 .map(themeRepository::findById).orElseThrow(() -> new RequestException("Theme not found"));
     }
 
     private static List<VocabularySentence> getVocabularySentenceList(
             List<Vocabulary> vocabularyListSaved,
-            Sentence sentenceSaved
-    ) {
+            Sentence sentenceSaved,
+            List<WordDTO> vocabulary) {
+        log.info("Casting into vocabulary list");
         return vocabularyListSaved.stream()
-                .map(element -> new VocabularySentence(sentenceSaved, element))
+                .map(element -> {
+                    var foundedWord = getWordByTitle(vocabulary, element);
+                    if (foundedWord.isEmpty()) {
+                        log.warn("For current word {} not found", element.getWord());
+                        return new VocabularySentence(sentenceSaved, element);
+                    }
+                    log.info("For current word {} founded -> {}, {}", element.getWord(), foundedWord.get().getWord(), foundedWord.get().getOrder());
+
+                    return new VocabularySentence(
+                            sentenceSaved,
+                            element,
+                            foundedWord.get().getOrder(),
+                            foundedWord.get().getDefaultWord(),
+                            foundedWord.get().getIsMarker()
+                    );
+
+                })
                 .toList();
+    }
+
+    private static Optional<WordDTO> getWordByTitle(List<WordDTO> vocabulary, Vocabulary element) {
+        return vocabulary.stream().filter(word -> element.getWord().equalsIgnoreCase(word.getWord())).findFirst();
     }
 }

@@ -1,6 +1,5 @@
 package org.zero.aienglish.model;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -14,11 +13,11 @@ public record SentenceDTO(
         String sentence,
         @NotNull
         @NotEmpty
-        String translate,
+        String translation,
         @Size(min = 1, max = 100)
-        String[] tenseList,
+        String[] sentenceTense,
         @NotNull
-        @Min(0)
-        Integer theme
+        @NotEmpty
+        List<WordDTO> vocabulary
 ) {
 }

@@ -8,11 +8,9 @@ import org.zero.aienglish.model.SentenceDTO;
 @Mapper
 public interface SentenceMapper {
 
-    @Mapping(target = "theme", ignore = true)
     SentenceDTO map(Sentence sentence);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "theme", ignore = true)
     @Mapping(target = "views", defaultValue = "0", ignore = true)
     Sentence map(SentenceDTO sentenceDTO);
 }

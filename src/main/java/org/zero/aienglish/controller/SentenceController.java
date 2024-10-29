@@ -17,7 +17,7 @@ public class SentenceController {
 
     @PutMapping
     public void addSentence(@RequestBody SentenceRequest sentenceRequest) {
-       sentenceService.addSentence(sentenceRequest.sentence(), sentenceRequest.wordList());
+//       sentenceService.addSentence(sentenceRequest.sentence(), sentenceRequest.wordList());
     }
 
 }

@@ -1,34 +1,71 @@
 {
-  "type": "json_schema",
-  "json_schema": {
-    "name": "sentences_generation",
-    "schema": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "sentence": {"type": "string"},
-          "translation": {"type": "string"},
-          "vocabulary": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "order": {"type": "number"},
-                "word": {"type": "string"},
-                "defaultWord": {"type": "string"},
-                "translate": {"type": "string"},
-                "speechPart": {"type": "string"},
-                "isMarker": {"type": "boolean"}
-              },
-              "required": ["order", "word", "defaultWord", "translate", "speechPart", "isMarker"],
-              "additionalProperties": false
-            }
-          }
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "sentence": {
+        "type": "string"
+      },
+      "translation": {
+        "type": "string",
+        "description": "Given sentence translated into Ukrainian language"
+      },
+      "sentenceTense": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "Tenses used in this sentence"
         },
-        "required": ["sentence", "translation", "vocabulary"],
         "additionalProperties": false
+      },
+      "vocabulary": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "order": {
+              "type": "number",
+              "description": "Order of this word in sentence (from 0 to n)"
+            },
+            "word": {
+              "type": "string"
+            },
+            "defaultWord": {
+              "type": "string",
+              "description": "Word default form for instance looking -> look"
+            },
+            "translate": {
+              "type": "string",
+              "description": "Word translated into Ukrainian language"
+            },
+            "speechPart": {
+              "type": "string",
+              "description": "For instance it can be: verb, noun, auxiliary verb"
+            },
+            "isMarker": {
+              "type": "boolean",
+              "description": "Whether the word is an indicator of the tense used in a given sentence"
+            }
+          },
+          "required": [
+            "order",
+            "word",
+            "defaultWord",
+            "translate",
+            "speechPart",
+            "isMarker"
+          ],
+          "additionalProperties": false
+        }
       }
-    }
-  }
+    },
+    "required": [
+      "sentence",
+      "translation",
+      "sentenceTenses",
+      "vocabulary"
+    ],
+    "additionalProperties": false
+  },
+  "additionalProperties": false
 }
