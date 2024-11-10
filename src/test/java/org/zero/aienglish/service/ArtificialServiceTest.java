@@ -53,14 +53,14 @@ class ArtificialServiceTest {
 
         List<WordDTO> vocabulary = getVocabulary();
 
-        var sentence = new SentenceDTO(
+        var sentence = new Sentence(
                 "Amenadiel helps Lucifer understand his emotions.",
                 "Аменадіель допомагає Люциферу зрозуміти свої емоції.",
                 new String[]{"Present Simple"},
                 vocabulary
         );
 
-        var message = new MessageDTO<>("user", List.of(sentence));
+        var message = new MessageDTO<>("assistant", List.of(sentence));
         ChoiceDTO choice_1 = new ChoiceDTO(0, message, "stop");
 
         var choice_length = new ChoiceDTO(1, null, "length");

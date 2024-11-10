@@ -52,7 +52,7 @@ public class ThemeControllerTest {
     @Test
     public void testGetThemeByTitle() throws Exception {
         // Arrange
-        String title = "test-title";
+        String title = "test-tense";
         when(themeService.getThemesByTitle(title)).thenReturn(List.of());
 
         // Act

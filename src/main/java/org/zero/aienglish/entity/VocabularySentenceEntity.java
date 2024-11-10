@@ -1,16 +1,16 @@
 package org.zero.aienglish.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Entity
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "vocabulary_sentence")
-public class VocabularySentence {
+public class VocabularySentenceEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -18,11 +18,11 @@ public class VocabularySentence {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sentence_id", nullable = false)
-    private Sentence sentence;
+    private SentenceEntity sentence;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vocabulary_id", nullable = false)
-    private Vocabulary vocabulary;
+    private VocabularyEntity vocabulary;
 
     @Column(name = "\"order\"")
     private Short order = 0;
@@ -31,15 +31,10 @@ public class VocabularySentence {
     @Column(name = "is_marker")
     private Boolean isMarker = Boolean.FALSE;
 
-    public VocabularySentence(Sentence sentence, Vocabulary vocabulary, Short order, String defaultWord, Boolean isMarker) {
-        this.sentence = sentence;
-        this.vocabulary = vocabulary;
-        this.order = order;
-        this.defaultWord = defaultWord;
-        this.isMarker = isMarker;
-    }
-
-    public VocabularySentence(Sentence sentence, Vocabulary vocabulary) {
+    public VocabularySentenceEntity(
+            SentenceEntity sentence,
+            VocabularyEntity vocabulary
+    ) {
         this.sentence = sentence;
         this.vocabulary = vocabulary;
     }

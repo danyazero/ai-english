@@ -3,7 +3,8 @@ package org.zero.aienglish.utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.zero.aienglish.entity.Vocabulary;
+import org.zero.aienglish.entity.SpeechPartEntity;
+import org.zero.aienglish.entity.VocabularyEntity;
 import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.SpeechRepository;
@@ -15,13 +16,13 @@ import java.util.function.BiFunction;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SpeechPart implements BiFunction<WordDTO, List<org.zero.aienglish.entity.SpeechPart>, Vocabulary> {
+public class SpeechPart implements BiFunction<WordDTO, List<SpeechPartEntity>, VocabularyEntity> {
     private final WordMapper wordMapper;
     private final SetSpeechPart setSpeechPart;
     private final SpeechRepository speechRepository;
 
     @Override
-    public Vocabulary apply(WordDTO currentWord, List<org.zero.aienglish.entity.SpeechPart> speechPartList) {
+    public VocabularyEntity apply(WordDTO currentWord, List<SpeechPartEntity> speechPartList) {
         log.info(
                 "Current word: {}, with speech part: {}",
                 currentWord.getDefaultWord(),
@@ -38,7 +39,7 @@ public class SpeechPart implements BiFunction<WordDTO, List<org.zero.aienglish.e
         return setSpeechPart.apply(mappedWord, currentSpeechPart.get());
     }
 
-    private Optional<org.zero.aienglish.entity.SpeechPart> getSpeechPartOrReplaceWithUnknown(List<org.zero.aienglish.entity.SpeechPart> speechPartList, WordDTO currentWord) {
+    private Optional<SpeechPartEntity> getSpeechPartOrReplaceWithUnknown(List<SpeechPartEntity> speechPartList, WordDTO currentWord) {
         var currentSpeechPart = speechPartList.stream()
                 .filter(speechPart -> isTitleEquals(currentWord, speechPart))
                 .findFirst()
@@ -54,7 +55,7 @@ public class SpeechPart implements BiFunction<WordDTO, List<org.zero.aienglish.e
                 });
     }
 
-    private static boolean isTitleEquals(WordDTO currentWord, org.zero.aienglish.entity.SpeechPart speechPart) {
+    private static boolean isTitleEquals(WordDTO currentWord, SpeechPartEntity speechPart) {
         return speechPart.getTitle().equalsIgnoreCase(currentWord.getSpeechPart());
     }
 }

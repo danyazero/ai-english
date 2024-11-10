@@ -7,7 +7,7 @@ import java.util.List;
 public record ChoiceDTO(
         @JsonProperty("index")
         Integer id,
-        MessageDTO<List<SentenceDTO>> message,
+        MessageDTO<List<Sentence>> message,
         @JsonProperty("finish_reason")
         String finishReason
 ) {

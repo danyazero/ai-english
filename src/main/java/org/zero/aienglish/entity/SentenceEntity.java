@@ -1,16 +1,17 @@
 package org.zero.aienglish.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @Setter
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "sentence")
-//@Accessors(chain = true)
-public class Sentence {
+public class SentenceEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -28,5 +29,5 @@ public class Sentence {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "theme", nullable = false)
-    private Theme theme;
+    private ThemeEntity theme;
 }

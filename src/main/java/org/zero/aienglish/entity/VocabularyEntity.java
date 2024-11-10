@@ -7,10 +7,11 @@ import org.hibernate.annotations.ColumnDefault;
 @Getter
 @Setter
 @Entity
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "vocabulary")
-public class Vocabulary {
+public class VocabularyEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -26,8 +27,8 @@ public class Vocabulary {
     @Column(name = "views", nullable = false)
     private Integer views = 0;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "speech_part_id", nullable = false)
-    private SpeechPart speechPart;
+    private SpeechPartEntity speechPart;
 
 }

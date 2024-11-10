@@ -5,9 +5,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.Theme;
-import org.zero.aienglish.entity.User;
-import org.zero.aienglish.entity.UserTheme;
+import org.zero.aienglish.entity.ThemeEntity;
+import org.zero.aienglish.entity.UserEntity;
+import org.zero.aienglish.entity.UserThemeEntity;
 import org.zero.aienglish.repository.ThemeRepository;
 import org.zero.aienglish.repository.UserRepository;
 import org.zero.aienglish.repository.UserThemeRepository;
@@ -37,20 +37,20 @@ public class ThemeServiceTest {
         String title = "Film";
         String searchValue = "%" + String.join("%", title.split("")) + "%";
 
-        Theme theme1 = new Theme();
+        ThemeEntity theme1 = new ThemeEntity();
         theme1.setId(1);
         theme1.setTitle("Film 1");
         theme1.setYear(2020);
 
-        Theme theme2 = new Theme();
+        ThemeEntity theme2 = new ThemeEntity();
         theme2.setId(2);
         theme2.setTitle("Film 2");
         theme2.setYear(2021);
 
-        List<Theme> themes = List.of(theme1, theme2);
+        List<ThemeEntity> themes = List.of(theme1, theme2);
         when(themeRepository.findThemeByTitle(searchValue)).thenReturn(themes);
 
-        List<Theme> result = themeService.getThemesByTitle(title);
+        List<ThemeEntity> result = themeService.getThemesByTitle(title);
 
         assertEquals(themes, result);
     }
@@ -61,16 +61,16 @@ public class ThemeServiceTest {
         Integer themeId_1 = 1;
         Integer themeId_2 = 2;
 
-        User user = new User();
+        UserEntity user = new UserEntity();
         user.setId(userId);
         user.setUsername("user1");
 
-        Theme theme = new Theme();
+        ThemeEntity theme = new ThemeEntity();
         theme.setId(themeId_1);
         theme.setTitle("Film 1");
         theme.setYear(2020);
 
-        Theme theme_2 = new Theme();
+        ThemeEntity theme_2 = new ThemeEntity();
         theme_2.setId(themeId_2);
         theme_2.setTitle("Film 2");
         theme_2.setYear(2020);
@@ -82,10 +82,10 @@ public class ThemeServiceTest {
 
         themeService.addThemeToFavorite(List.of(themeId_1, themeId_2), userId);
 
-        ArgumentCaptor<List<UserTheme>> userThemeCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<UserThemeEntity>> userThemeCaptor = ArgumentCaptor.forClass(List.class);
         verify(userThemeRepository).saveAll(userThemeCaptor.capture());
 
-        List<UserTheme> capturedUserTheme = userThemeCaptor.getValue();
+        List<UserThemeEntity> capturedUserTheme = userThemeCaptor.getValue();
 
         assertEquals(2, capturedUserTheme.size());
         assertEquals(theme, capturedUserTheme.getFirst().getTheme());

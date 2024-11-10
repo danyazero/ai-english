@@ -7,31 +7,30 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.Vocabulary;
+import org.zero.aienglish.entity.*;
 import org.zero.aienglish.exception.RequestException;
-import org.zero.aienglish.mapper.WordMapper;
+import org.zero.aienglish.model.TaskResultDTO;
+import org.zero.aienglish.model.TaskType;
 import org.zero.aienglish.model.WordDTO;
-import org.zero.aienglish.repository.SpeechRepository;
-import org.zero.aienglish.repository.VocabularyRepository;
-import org.zero.aienglish.repository.VocabularySentenceRepository;
+import org.zero.aienglish.model.WordResponseDTO;
+import org.zero.aienglish.repository.*;
+import org.zero.aienglish.utils.TaskManager;
 import org.zero.aienglish.utils.TitleCaseWord;
 import org.zero.aienglish.utils.SpeechPart;
-import org.zero.aienglish.utils.SetSpeechPart;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SentenceServiceTest {
     @Mock
     private TitleCaseWord titleCaseWord;
     @Mock
-    private WordMapper wordMapper;
-    @Mock
-    private SetSpeechPart setSpeechPart;
+    AnswersHistoryRepository answersHistoryRepository;
     @Mock
     private SpeechRepository speechRepository;
     @Mock
@@ -39,7 +38,7 @@ class SentenceServiceTest {
     @Mock
     private VocabularyRepository vocabularyRepository;
     @Mock
-    private VocabularySentenceRepository vocabularySentenceRepository;
+    private TaskManager taskManager;
 
     @InjectMocks
     private SentenceService sentenceService;
@@ -48,32 +47,66 @@ class SentenceServiceTest {
     private final String speechPartSecond = "Verb";
     private WordDTO wordFirst;
     private WordDTO wordSecond;
-    private org.zero.aienglish.entity.SpeechPart speechPartObjectFirst;
-    private org.zero.aienglish.entity.SpeechPart speechPartObjectSecond;
-    private Vocabulary vocabularyFirst;
-    private Vocabulary vocabularySecond;
-    private Vocabulary vocabularyFirstTitle;
-    private Vocabulary vocabularySecondTitle;
+    private SpeechPartEntity speechPartObjectFirst;
+    private SpeechPartEntity speechPartObjectSecond;
+    private VocabularyEntity vocabularyFirst;
+    private VocabularyEntity vocabularySecond;
+    private VocabularyEntity vocabularyFirstTitle;
+    private VocabularyEntity vocabularySecondTitle;
+
+    private final int userId = 3;
+    private final float acceptableAccuracy = 100.0F;
+    private SentenceEntity sentence;
+    private UserEntity user;
+    private SentenceUserHistoryEntity history;
+    private final String correctSentence = "test test_1";
+    private TaskResultDTO taskResult;
+    private WordResponseDTO word_1;
+    private WordResponseDTO word_2;
 
     @BeforeEach
     void setUp() {
         wordFirst = new WordDTO("Test", (short) 0, "Test", "test_translated", speechPartFirst, false);
         wordSecond = new WordDTO("Test_1", (short) 1, "Test", "test_translated_1", speechPartSecond, false);
 
-        speechPartObjectFirst = new org.zero.aienglish.entity.SpeechPart(1, speechPartFirst, speechPartFirst, speechPartFirst);
-        speechPartObjectSecond = new org.zero.aienglish.entity.SpeechPart(2, speechPartSecond, speechPartSecond, speechPartSecond);
+        speechPartObjectFirst = new SpeechPartEntity(1, speechPartFirst, speechPartFirst, speechPartFirst);
+        speechPartObjectSecond = new SpeechPartEntity(2, speechPartSecond, speechPartSecond, speechPartSecond);
 
-        vocabularyFirst = new Vocabulary(null, "test", "test_translated", null, speechPartObjectFirst);
-        vocabularySecond = new Vocabulary(null, "test_1", "test_translated_1", null, speechPartObjectSecond);
+        vocabularyFirst = new VocabularyEntity(null, "test", "test_translated", null, speechPartObjectFirst);
+        vocabularySecond = new VocabularyEntity(null, "test_1", "test_translated_1", null, speechPartObjectSecond);
 
-        vocabularyFirstTitle = new Vocabulary(null, "Test", "Test_translated", null, speechPartObjectFirst);
-        vocabularySecondTitle = new Vocabulary(null, "Test_1", "Test_translated_1", null, speechPartObjectSecond);
+        vocabularyFirstTitle = new VocabularyEntity(null, "Test", "Test_translated", null, speechPartObjectFirst);
+        vocabularySecondTitle = new VocabularyEntity(null, "Test_1", "Test_translated_1", null, speechPartObjectSecond);
+
+        user = UserEntity.builder()
+                .id(userId)
+                .username("danyazero")
+                .build();
+
+        word_1 = new WordResponseDTO(1, "test", "test_translated", speechPartObjectFirst, false);
+        word_2 = new WordResponseDTO(2, "test_1", "test_translated_1", speechPartObjectSecond, false);
+        List<WordResponseDTO> wordList = List.of(word_1, word_2);
+        taskResult = new TaskResultDTO(1, TaskType.omittedWord, wordList);
+
+        sentence = SentenceEntity.builder()
+                .id(1)
+                .views(null)
+                .theme(null)
+                .sentence("test test_1")
+                .translation(correctSentence)
+                .build();
+        history = SentenceUserHistoryEntity.builder()
+                .user(user)
+                .sentence(sentence)
+                .lastAnswered(Instant.now())
+                .accuracy((double) acceptableAccuracy)
+                .build();
     }
 
     @Test
     void addWordList_Success() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<org.zero.aienglish.entity.SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+        List<SpeechPartEntity> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
@@ -99,11 +132,11 @@ class SentenceServiceTest {
     @Test
     void addWordList_WithAlreadyExist() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<org.zero.aienglish.entity.SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+        List<SpeechPartEntity> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
-        List<Vocabulary> alreadySavedList = List.of(vocabularySecond);
+        List<VocabularyEntity> alreadySavedList = List.of(vocabularySecond);
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
@@ -122,7 +155,7 @@ class SentenceServiceTest {
     @Test
     void addWordList_SuccessWithInvalidSpeechPart() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<org.zero.aienglish.entity.SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst);
+        List<SpeechPartEntity> speechPartObjectList = List.of(speechPartObjectFirst);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);

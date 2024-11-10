@@ -21,15 +21,14 @@ import java.util.Objects;
 public class ArtificialService {
     private static final String AI_RESULT_CHOICE = "assistant";
     private static final String AI_STATUS_STOP = "stop";
-    private final SentenceService sentenceService;
     private final OpenAIConfig config;
     private final RestTemplate api;
 
-    public Integer generateSentenceListByTheme(ThemeDTO theme) {
+    public List<Sentence> generateSentenceListByTheme(ThemeDTO theme) {
         return generateSentenceListByTheme(theme, 3);
     }
 
-    public Integer generateSentenceListByTheme(
+    public List<Sentence> generateSentenceListByTheme(
             ThemeDTO theme,
             Integer sentenceCount
     ) {
@@ -52,9 +51,11 @@ public class ArtificialService {
             throw new SentenceUpdateException("Sentence Update Error");
         }
 
-        SentenceResponse body = getRequestBodyOrThrow(responseEntity);
-
-        return saveAllSentenceList(body, theme.getId());
+        return getRequestBodyOrThrow(responseEntity)
+                .choices()
+                .getFirst()
+                .message()
+                .content();
     }
 
     public static GenerateRequest getRequestForGenerate(
@@ -95,23 +96,6 @@ public class ArtificialService {
         return headers;
     }
 
-    private Integer saveAllSentenceList(
-            SentenceResponse body,
-            Integer themeId
-    ) {
-        List<SentenceDTO> sentenceList = getGeneratedContent(body);
-        var successfullySaved = 0;
-        for (SentenceDTO sentence : sentenceList) {
-            try {
-                sentenceService.addSentence(sentence, themeId);
-                successfullySaved++;
-            } catch (Exception e) {
-                log.warn("Error occurred while adding sentence -> {}", e.getMessage());
-            }
-        }
-        return successfullySaved;
-    }
-
     private static MessageDTO<String> getUserMessage(String theme) {
         return new MessageDTO<>("user", "I want to practice the theme of the \"" + theme + "\" series. ");
     }
@@ -129,7 +113,7 @@ public class ArtificialService {
         return Objects.requireNonNull(body).choices() == null || body.choices().isEmpty();
     }
 
-    private static List<SentenceDTO> getGeneratedContent(SentenceResponse body) {
+    private static List<Sentence> getGeneratedContent(SentenceResponse body) {
         return body.choices().stream()
                 .filter(ArtificialService::isGenerationResultChoice)
                 .findFirst()
@@ -160,18 +144,18 @@ public class ArtificialService {
               "items": {
                 "type": "object",
                 "properties": {
-                  "sentence": {
+                  "words": {
                     "type": "string"
                   },
                   "translation": {
                     "type": "string",
-                    "description": "Given sentence translated into Ukrainian language"
+                    "description": "Given words translated into Ukrainian language"
                   },
                   "sentenceTense": {
                     "type": "array",
                     "items": {
                       "type": "string",
-                      "description": "Tenses used in this sentence"
+                      "description": "Tenses used in this words"
                     },
                     "additionalProperties": false
                   },
@@ -182,7 +166,7 @@ public class ArtificialService {
                       "properties": {
                         "order": {
                           "type": "number",
-                          "description": "Order of this word in sentence (from 0 to n)"
+                          "description": "Order of this word in words (from 0 to n)"
                         },
                         "word": {
                           "type": "string"
@@ -201,7 +185,7 @@ public class ArtificialService {
                         },
                         "isMarker": {
                           "type": "boolean",
-                          "description": "Whether the word is an indicator of the tense used in a given sentence"
+                          "description": "Whether the word is an indicator of the tense used in a given words"
                         }
                       },
                       "required": [
@@ -217,7 +201,7 @@ public class ArtificialService {
                   }
                 },
                 "required": [
-                  "sentence",
+                  "words",
                   "translation",
                   "sentenceTenses",
                   "vocabulary"

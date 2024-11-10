@@ -1,7 +1,10 @@
 package org.zero.aienglish.utils;
 
+import org.springframework.stereotype.Component;
+
 import java.util.function.BiFunction;
 
+@Component
 public class AccuracyCheck implements BiFunction<String, String, Float> {
 
     @Override

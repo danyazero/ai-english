@@ -1,10 +1,11 @@
 package org.zero.aienglish.mapper;
 
+import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
-import org.zero.aienglish.entity.Theme;
+import org.zero.aienglish.entity.ThemeEntity;
 import org.zero.aienglish.model.ThemeDTO;
 
-@Mapper
+@Mapper(builder = @Builder(disableBuilder = true))
 public interface ThemeMapper {
-    Theme map(ThemeDTO themeDTO);
+    ThemeEntity map(ThemeDTO themeDTO);
 }

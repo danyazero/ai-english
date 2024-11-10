@@ -1,17 +1,16 @@
 package org.zero.aienglish.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Entity
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "sentence_tense")
-public class SentenceTense {
+public class SentenceTenseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -19,13 +18,16 @@ public class SentenceTense {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sentence_id", nullable = false)
-    private Sentence sentence;
+    private SentenceEntity sentence;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "tense_id", nullable = false)
-    private Tense tense;
+    private TenseEntity tense;
 
-    public SentenceTense(Tense tense, Sentence sentence) {
+    public SentenceTenseEntity(
+            TenseEntity tense,
+            SentenceEntity sentence
+    ) {
         this.tense = tense;
         this.sentence = sentence;
     }

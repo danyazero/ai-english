@@ -1,8 +1,11 @@
 package org.zero.aienglish.model;
 
-public interface TenseDTO {
-    Integer getId();
-    String getFormula();
-    String getVerb();
-    String getTense();
-}
+import lombok.Builder;
+
+@Builder
+public record TenseDTO(
+        Integer id,
+        String tense,
+        String formula,
+        String verb
+) {}

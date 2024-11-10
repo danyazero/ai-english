@@ -2,8 +2,8 @@ package org.zero.aienglish.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.zero.aienglish.entity.Theme;
-import org.zero.aienglish.entity.UserTheme;
+import org.zero.aienglish.entity.ThemeEntity;
+import org.zero.aienglish.entity.UserThemeEntity;
 import org.zero.aienglish.mapper.ThemeMapper;
 import org.zero.aienglish.repository.ThemeRepository;
 import org.zero.aienglish.repository.UserThemeRepository;
@@ -19,13 +19,13 @@ public class ThemeService {
     private final UserThemeRepository userThemeRepository;
     private final ThemeMapper themeMapper;
 
-    public List<Theme> getPopularThemeList() {
+    public List<ThemeEntity> getPopularThemeList() {
         var popularThemes = themeRepository.findPopularThemeList();
 
         return popularThemes.stream().map(themeMapper::map).toList();
     }
 
-    public List<Theme> getThemesByTitle(String title) {
+    public List<ThemeEntity> getThemesByTitle(String title) {
         var searchValue = "%" + String.join( "%", title.split("")) + "%";
         return themeRepository.findThemeByTitle(searchValue);
     }
@@ -34,7 +34,7 @@ public class ThemeService {
         var user = userRepository.getReferenceById(userId);
         var userFavoriteThemeList = themeIdList.stream()
                 .map(themeRepository::getReferenceById)
-                .map(film -> new UserTheme(film, user))
+                .map(film -> new UserThemeEntity(film, user))
                 .toList();
         userThemeRepository.saveAll(userFavoriteThemeList);
     }

@@ -7,7 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.Vocabulary;
+import org.zero.aienglish.entity.SpeechPartEntity;
+import org.zero.aienglish.entity.VocabularyEntity;
 import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.SpeechRepository;
@@ -33,31 +34,31 @@ class SpeechPartTest {
     private SpeechPart speechPartSer;
 
     private WordDTO currentWord;
-    private Vocabulary currentVocabulary;
-    private Vocabulary currentVocabularyWith;
+    private VocabularyEntity currentVocabulary;
+    private VocabularyEntity currentVocabularyWith;
     private WordDTO currentIncorrectWord;
-    private Vocabulary currentIncorrectVocabulary;
-    private Vocabulary currentIncorrectVocabularyUnknown;
+    private VocabularyEntity currentIncorrectVocabulary;
+    private VocabularyEntity currentIncorrectVocabularyUnknown;
 
-    private List<org.zero.aienglish.entity.SpeechPart> speechPartList;
+    private List<SpeechPartEntity> speechPartList;
 
-    private org.zero.aienglish.entity.SpeechPart speechPartSecond;
-    private org.zero.aienglish.entity.SpeechPart speechPart;
-    private org.zero.aienglish.entity.SpeechPart unknownSpeechPart;
+    private SpeechPartEntity speechPartSecond;
+    private SpeechPartEntity speechPart;
+    private SpeechPartEntity unknownSpeechPart;
 
     @BeforeEach
     void setUp() {
-        speechPart = new org.zero.aienglish.entity.SpeechPart(1, "Noun", "test", "test");
-        speechPartSecond = new org.zero.aienglish.entity.SpeechPart(2, "Pronoun", "test", "test");
-        unknownSpeechPart = new org.zero.aienglish.entity.SpeechPart(3, "Unknown", "test", "test");
+        speechPart = new SpeechPartEntity(1, "Noun", "test", "test");
+        speechPartSecond = new SpeechPartEntity(2, "Pronoun", "test", "test");
+        unknownSpeechPart = new SpeechPartEntity(3, "Unknown", "test", "test");
 
         currentWord = new WordDTO("test", (short) 0, "test", "test", "Noun", false);
-        currentVocabulary = new Vocabulary(1, "test", "test", 0, null);
-        currentVocabularyWith = new Vocabulary(1, "test", "test", 0, speechPart);
+        currentVocabulary = new VocabularyEntity(1, "test", "test", 0, null);
+        currentVocabularyWith = new VocabularyEntity(1, "test", "test", 0, speechPart);
 
         currentIncorrectWord = new WordDTO("test", (short) 0, "test", "test", "Incorrectoun", false);
-        currentIncorrectVocabulary = new Vocabulary(2, "test", "test", 0, null);
-        currentIncorrectVocabularyUnknown = new Vocabulary(2, "test", "test", 0, unknownSpeechPart);
+        currentIncorrectVocabulary = new VocabularyEntity(2, "test", "test", 0, null);
+        currentIncorrectVocabularyUnknown = new VocabularyEntity(2, "test", "test", 0, unknownSpeechPart);
 
         speechPartList = new ArrayList<>();
 

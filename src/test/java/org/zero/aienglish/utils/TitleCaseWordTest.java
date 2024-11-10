@@ -3,18 +3,18 @@ package org.zero.aienglish.utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.zero.aienglish.entity.Vocabulary;
+import org.zero.aienglish.entity.VocabularyEntity;
 
 class TitleCaseWordTest {
     private TitleCaseWord function;
-    private Vocabulary wordNotTitleCase;
-    private Vocabulary wordTitleCase;
+    private VocabularyEntity wordNotTitleCase;
+    private VocabularyEntity wordTitleCase;
 
     @BeforeEach
     void setUp() {
         function = new TitleCaseWord();
-        wordNotTitleCase = new Vocabulary(1, "test", "test", 0, null);
-        wordTitleCase = new Vocabulary(1, "Test", "Test", 0, null);
+        wordNotTitleCase = new VocabularyEntity(1, "test", "test", 0, null);
+        wordTitleCase = new VocabularyEntity(1, "Test", "Test", 0, null);
     }
 
     @Test
