@@ -105,8 +105,14 @@ class ArtificialServiceTest {
         var entity = new HttpEntity<>(generatedRequestBody, headers);
         when(restTemplate.postForEntity(apiURL, entity, SentenceResponse.class))
                 .thenReturn(responseEntity);
-        artificialService.generateSentenceListByTheme(moneyHeistTheme);
-        verify(sentenceService, times(1)).addSentence(responseEntity.getBody().choices().getFirst().message().content().getFirst(), moneyHeistTheme.getId());
+        var res = artificialService.generateSentenceListByTheme(moneyHeistTheme);
+        var vocabularyList = responseEntity.getBody().choices().getFirst().message().content();
+
+        Assertions.assertEquals(vocabularyList.size(), res.size());
+        Assertions.assertEquals(vocabularyList.getFirst(), res.getFirst());
+        Assertions.assertEquals(vocabularyList.getFirst().sentence(), res.getFirst().sentence());
+        Assertions.assertEquals(vocabularyList.getFirst().translation(), res.getFirst().translation());
+        Assertions.assertEquals(vocabularyList.getFirst().vocabulary().size(), res.getFirst().vocabulary().size());
     }
 
     @Test

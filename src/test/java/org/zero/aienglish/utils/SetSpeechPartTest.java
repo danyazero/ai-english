@@ -19,7 +19,7 @@ class SetSpeechPartTest {
     @DisplayName("Setting SpeechPart on Vocabulary object")
     void apply() {
         var speechPart = new SpeechPartEntity(1, "test", "test", "test");
-        var vocabulary = new VocabularyEntity(1, "test", "test", 0, null);
+        var vocabulary = new VocabularyEntity(1, "test", "test", null);
 
         Assertions.assertNull(vocabulary.getSpeechPart());
 

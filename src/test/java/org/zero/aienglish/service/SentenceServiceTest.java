@@ -9,10 +9,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.zero.aienglish.entity.*;
 import org.zero.aienglish.exception.RequestException;
-import org.zero.aienglish.model.TaskResultDTO;
-import org.zero.aienglish.model.TaskType;
-import org.zero.aienglish.model.WordDTO;
-import org.zero.aienglish.model.WordResponseDTO;
+import org.zero.aienglish.mapper.WordMapper;
+import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.*;
 import org.zero.aienglish.utils.TaskManager;
 import org.zero.aienglish.utils.TitleCaseWord;
@@ -30,15 +28,17 @@ class SentenceServiceTest {
     @Mock
     private TitleCaseWord titleCaseWord;
     @Mock
-    AnswersHistoryRepository answersHistoryRepository;
-    @Mock
     private SpeechRepository speechRepository;
     @Mock
     private SpeechPart getVocabularySpeechPart;
     @Mock
     private VocabularyRepository vocabularyRepository;
     @Mock
-    private TaskManager taskManager;
+    private VocabularySentenceRepository vocabularySentenceRepository;
+    @Mock
+    private SentenceTenseRepository sentenceTenseRepository;
+    @Mock
+    private WordMapper wordMapper;
 
     @InjectMocks
     private SentenceService sentenceService;
@@ -61,30 +61,62 @@ class SentenceServiceTest {
     private SentenceUserHistoryEntity history;
     private final String correctSentence = "test test_1";
     private TaskResultDTO taskResult;
+    private WordResponseDTO word1;
     private WordResponseDTO word_1;
     private WordResponseDTO word_2;
 
+    private SentenceDTO sentenceDTO;
+    private SentenceTenseEntity sentenceTense;
+    private VocabularySentenceEntity vocabularySentence;
+    private VocabularyEntity vocabulary;
+    private TaskDTO taskDTO;
+
     @BeforeEach
     void setUp() {
+        sentenceDTO = new SentenceDTO() {
+            @Override
+            public Integer getId() {
+                return 2;
+            }
+
+            @Override
+            public String getTranslate() {
+                return "test translate";
+            }
+
+            @Override
+            public String getSentence() {
+                return "test sentence";
+            }
+
+            @Override
+            public Double getScore() {
+                return 98.0;
+            }
+        };
         wordFirst = new WordDTO("Test", (short) 0, "Test", "test_translated", speechPartFirst, false);
         wordSecond = new WordDTO("Test_1", (short) 1, "Test", "test_translated_1", speechPartSecond, false);
 
         speechPartObjectFirst = new SpeechPartEntity(1, speechPartFirst, speechPartFirst, speechPartFirst);
         speechPartObjectSecond = new SpeechPartEntity(2, speechPartSecond, speechPartSecond, speechPartSecond);
 
-        vocabularyFirst = new VocabularyEntity(null, "test", "test_translated", null, speechPartObjectFirst);
-        vocabularySecond = new VocabularyEntity(null, "test_1", "test_translated_1", null, speechPartObjectSecond);
+        vocabularyFirst = new VocabularyEntity(null, "test", "test_translated", speechPartObjectFirst);
+        vocabularySecond = new VocabularyEntity(null, "test_1", "test_translated_1", speechPartObjectSecond);
 
-        vocabularyFirstTitle = new VocabularyEntity(null, "Test", "Test_translated", null, speechPartObjectFirst);
-        vocabularySecondTitle = new VocabularyEntity(null, "Test_1", "Test_translated_1", null, speechPartObjectSecond);
+        vocabularyFirstTitle = new VocabularyEntity(null, "Test", "Test_translated", speechPartObjectFirst);
+        vocabularySecondTitle = new VocabularyEntity(null, "Test_1", "Test_translated_1", speechPartObjectSecond);
 
         user = UserEntity.builder()
                 .id(userId)
-                .username("danyazero")
+                .firstName("danyazero")
+                .lastName("danyazero")
+                .email("danyazero@gmail.com")
+                .role("USER")
+                .picture("picture")
                 .build();
 
-        word_1 = new WordResponseDTO(1, "test", "test_translated", speechPartObjectFirst, false);
-        word_2 = new WordResponseDTO(2, "test_1", "test_translated_1", speechPartObjectSecond, false);
+        word_1 = new WordResponseDTO(1, "test", "test_translated", speechPartObjectFirst.getTitle(), false);
+        word_2 = new WordResponseDTO(2, "test_1", "test_translated_1", speechPartObjectSecond.getTitle(), false);
         List<WordResponseDTO> wordList = List.of(word_1, word_2);
         taskResult = new TaskResultDTO(1, TaskType.omittedWord, wordList);
 
@@ -100,6 +132,46 @@ class SentenceServiceTest {
                 .sentence(sentence)
                 .lastAnswered(Instant.now())
                 .accuracy((double) acceptableAccuracy)
+                .build();
+
+        var time = TimeEntity.builder()
+                .id(2)
+                .title("Present")
+                .build();
+
+        var duration = DurationEntity.builder()
+                .id(5)
+                .title("Simple")
+                .build();
+
+        var tense = TenseEntity.builder()
+                .titleTime(time)
+                .titleDuration(duration)
+                .verb("test")
+                .formula("test")
+                .build();
+
+        sentenceTense = SentenceTenseEntity.builder()
+                .sentence(sentence)
+                .tense(tense)
+                .build();
+
+        vocabularySentence = VocabularySentenceEntity.builder()
+                .order((short) 0)
+                .sentence(sentence)
+                .vocabulary(vocabulary)
+                .isMarker(false)
+                .defaultWord("test")
+                .build();
+
+        word1 = WordResponseDTO.builder()
+                .word("test")
+                .translate("test translate")
+                .build();
+        taskDTO = TaskDTO.builder()
+                .id(2)
+                .words(List.of(word1))
+                .tenses(List.of(tense))
                 .build();
     }
 
@@ -186,5 +258,18 @@ class SentenceServiceTest {
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(List.of());
 
         Assertions.assertThrows(RequestException.class, () -> sentenceService.getVocabularyList(wordList));
+    }
+
+    @Test
+    void sentenceDetailsExtractor() {
+        when(sentenceTenseRepository.findAllBySentenceId(sentenceDTO.getId())).thenReturn(List.of(sentenceTense));
+        when(vocabularySentenceRepository.getAllBySentenceIdOrderByOrder(sentenceDTO.getId())).thenReturn(List.of(vocabularySentence));
+        when(wordMapper.map(vocabularySentence)).thenReturn(word1);
+        var res = sentenceService.getSentenceDetails(sentenceDTO);
+
+        Assertions.assertEquals(taskDTO.id(), res.id());
+        Assertions.assertEquals(taskDTO.words(), res.words());
+        Assertions.assertEquals(taskDTO.tenses(), res.tenses());
+        Assertions.assertEquals(taskDTO.sentence(), res.sentence());
     }
 }

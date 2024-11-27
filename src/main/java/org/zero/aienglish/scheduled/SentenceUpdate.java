@@ -2,6 +2,7 @@ package org.zero.aienglish.scheduled;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.zero.aienglish.exception.SentenceUpdateException;
 import org.zero.aienglish.model.Sentence;
@@ -22,7 +23,7 @@ public class SentenceUpdate {
     private final ArtificialService artificialService;
     private final SentenceService sentenceService;
 
-//    @Scheduled(fixedRate = 100_000)
+    @Scheduled(fixedRate = 10_000)
     private void run() {
         var themeForUpdate = themeRepository.findThemeForUpdate();
         if (themeForUpdate.isEmpty()) {
@@ -33,14 +34,10 @@ public class SentenceUpdate {
         var generatedSentenceList = artificialService.generateSentenceListByTheme(
                 themeForUpdate.get()
         );
-        var successfullySaved = saveGeneratedSentenceList(generatedSentenceList, themeForUpdate);
+        saveGeneratedSentenceList(generatedSentenceList, themeForUpdate);
 
-        if (successfullySaved == 0) {
-            log.warn("Zero sentences saved");
-            return;
-        }
         themeRepository.updateLastUpdate(Instant.now(), themeForUpdate.get().getId());
-        log.info("Sentence update successful");
+        log.info("Sentence update finished");
 
     }
 

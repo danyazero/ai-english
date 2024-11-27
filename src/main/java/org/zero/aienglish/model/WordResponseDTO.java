@@ -13,6 +13,6 @@ public class WordResponseDTO {
     Integer id;
     String word = "__";
     String translate = "__";
-    SpeechPartEntity speechPart;
+    String speechPart;
     Boolean isMarker = Boolean.FALSE;
 }

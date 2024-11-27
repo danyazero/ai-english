@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.zero.aienglish.entity.SpeechPartEntity;
 import org.zero.aienglish.entity.VocabularyEntity;
 import org.zero.aienglish.entity.VocabularySentenceEntity;
+import org.zero.aienglish.model.SentenceDTO;
 import org.zero.aienglish.model.VocabularyDTO;
 
 class WordMapperTest {
@@ -14,10 +15,33 @@ class WordMapperTest {
     private SpeechPartEntity speechPart;
     private VocabularyDTO vocabularyDTO;
     private VocabularySentenceEntity vocabularySentence;
+    private SentenceDTO sentenceDTO;
 
     @BeforeEach
     void setUp() {
         wordMapper = new WordMapperImpl();
+
+        sentenceDTO = new SentenceDTO() {
+            @Override
+            public Integer getId() {
+                return 12;
+            }
+
+            @Override
+            public String getTranslate() {
+                return "test translate";
+            }
+
+            @Override
+            public String getSentence() {
+                return "test word";
+            }
+
+            @Override
+            public Double getScore() {
+                return 50.0;
+            }
+        };
 
         speechPart = new SpeechPartEntity();
         speechPart.setId(null);
@@ -88,12 +112,21 @@ class WordMapperTest {
     void map_2() {
         var res = wordMapper.map(vocabularyDTO);
 
-        Assertions.assertEquals(speechPart.getTitle(), res.getSpeechPart().getTitle());
-        Assertions.assertEquals(speechPart.getAnswersTo(), res.getSpeechPart().getAnswersTo());
-        Assertions.assertEquals(speechPart.getTranslate(), res.getSpeechPart().getTranslate());
+        Assertions.assertEquals(speechPart.getTitle(), res.getSpeechPart());
         Assertions.assertEquals(vocabularySentence.getVocabulary().getWord(), res.getWord());
         Assertions.assertEquals(vocabularySentence.getVocabulary().getTranslate(), res.getTranslate());
         Assertions.assertEquals(false, res.getIsMarker());
         Assertions.assertEquals(vocabularySentence.getVocabulary().getId(), res.getId());
+    }
+
+    @Test
+    void map_3() {
+        var res = wordMapper.map(sentenceDTO);
+
+        Assertions.assertEquals("Unknown", res.getSpeechPart());
+        Assertions.assertEquals(sentenceDTO.getId(), res.getId());
+        Assertions.assertEquals(sentenceDTO.getTranslate(), res.getTranslate());
+        Assertions.assertEquals(sentenceDTO.getSentence(), res.getWord());
+        Assertions.assertEquals(false, res.getIsMarker());
     }
 }

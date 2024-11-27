@@ -9,10 +9,11 @@ import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.TenseMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.*;
+import org.zero.aienglish.service.SentenceService;
 import org.zero.aienglish.utils.AccuracyCheck;
-import org.zero.aienglish.utils.SentenceDetailsExtractor;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -25,9 +26,9 @@ public class TenseTaskGenerator implements TaskGenerator {
     private final AccuracyCheck accuracyCheck;
     private final UserRepository userRepository;
     private final TenseRepository tenseRepository;
+    private final SentenceService sentenceService;
     private final SentenceRepository sentenceRepository;
     private final SentenceTenseRepository sentenceTenseRepository;
-    private final SentenceDetailsExtractor sentenceDetailsExtractor;
     private final AnswersHistoryRepository answersHistoryRepository;
 
     @Override
@@ -37,7 +38,7 @@ public class TenseTaskGenerator implements TaskGenerator {
 
     @Override
     public SentenceTask generateTask(SentenceDTO selectedSentence) {
-        var sentenceDetails = sentenceDetailsExtractor.apply(selectedSentence);
+        var sentenceDetails = sentenceService.getSentenceDetails(selectedSentence);
         var tenseTitle = getTenseTitle(sentenceDetails.tenses());
         log.info("tenseTitle -> {}", tenseTitle);
 
@@ -58,7 +59,8 @@ public class TenseTaskGenerator implements TaskGenerator {
 
         var answers = mappedTenses.stream()
                 .map(tenseMapper::map)
-                .toList();
+                .collect(Collectors.toList());
+        Collections.shuffle(answers);
         log.info("answers ({}) -> {}", answers.size(), answers);
 
         return SentenceTask.builder()

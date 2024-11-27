@@ -9,11 +9,12 @@ import org.zero.aienglish.mapper.TenseMapper;
 import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.VocabularySentenceRepository;
+import org.zero.aienglish.service.SentenceService;
 import org.zero.aienglish.utils.Random;
 import org.zero.aienglish.utils.SentenceCheck;
-import org.zero.aienglish.utils.SentenceDetailsExtractor;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -21,10 +22,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+
 public class OmittedWordTaskGenerator implements TaskGenerator {
-    private static final String[] speechPartIgnoreList = new String[]{"article", "preposition", "pronoun"};
-    private final SentenceDetailsExtractor sentenceDetailsExtractor;
+    private static final String[] speechPartIgnoreList = new String[]{"article", "preposition", "pronoun", "unknown", "gerund", "participle"};
     private final VocabularySentenceRepository vocabularyRepository;
+    private final SentenceService sentenceService;
     private final SentenceCheck sentenceCheck;
     private final TenseMapper tenseMapper;
     private final WordMapper wordMapper;
@@ -37,7 +39,7 @@ public class OmittedWordTaskGenerator implements TaskGenerator {
     @Override
     @Transactional
     public SentenceTask generateTask(SentenceDTO selectedSentence) {
-        var sentenceTask = sentenceDetailsExtractor.apply(selectedSentence);
+        var sentenceTask = sentenceService.getSentenceDetails(selectedSentence);
 
         var omitted = getWordListWithOmittedWord(sentenceTask.words());
 
@@ -53,6 +55,7 @@ public class OmittedWordTaskGenerator implements TaskGenerator {
                 ).stream()
                 .map(wordMapper::map).collect(Collectors.toList());
         answerWordList.add(omitted.omittedWord());
+        Collections.shuffle(answerWordList);
 
         log.info("Generated answer word list with size -> {}", answerWordList.size());
 
@@ -107,6 +110,6 @@ public class OmittedWordTaskGenerator implements TaskGenerator {
     }
 
     private static boolean isWordRelevant(WordResponseDTO word) {
-        return !Arrays.stream(speechPartIgnoreList).toList().contains(word.getSpeechPart().getTitle().toLowerCase());
+        return !Arrays.stream(speechPartIgnoreList).toList().contains(word.getSpeechPart().toLowerCase());
     }
 }

@@ -94,7 +94,11 @@ class TenseTaskGeneratorTest {
                 .sentence("test test2 test3")
                 .build();
         user = UserEntity.builder()
-                .username("test username")
+                .firstName("test username")
+                .lastName("test username")
+                .role("USER")
+                .email("test@test.com")
+                .picture("test picture")
                 .id(userId)
                 .build();
     }

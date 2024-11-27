@@ -6,9 +6,12 @@ import org.zero.aienglish.entity.VocabularySentenceEntity;
 import org.zero.aienglish.model.VocabularyDTO;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface VocabularySentenceRepository extends JpaRepository<VocabularySentenceEntity, Integer> {
     List<VocabularySentenceEntity> getAllBySentenceIdOrderByOrder(Integer id);
+
+    Optional<VocabularySentenceEntity> findFirstById(Integer id);
 
 
     @Query(value = """

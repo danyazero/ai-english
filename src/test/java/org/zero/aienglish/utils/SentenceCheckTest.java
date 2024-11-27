@@ -90,7 +90,11 @@ class SentenceCheckTest {
                 .sentence("test test2 test3")
                 .build();
         user = UserEntity.builder()
-                .username("test username")
+                .firstName("test username")
+                .lastName("test username")
+                .email("test@test.com")
+                .role("USER")
+                .picture("test picture")
                 .id(userId)
                 .build();
     }

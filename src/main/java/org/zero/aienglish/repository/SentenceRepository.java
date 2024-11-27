@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.zero.aienglish.entity.SentenceEntity;
 import org.zero.aienglish.model.SentenceDTO;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SentenceRepository extends JpaRepository<SentenceEntity, Integer> {
@@ -31,4 +32,27 @@ public interface SentenceRepository extends JpaRepository<SentenceEntity, Intege
             limit 1
             """, nativeQuery = true)
     Optional<SentenceDTO> getSentenceForUser(Integer userId);
+
+    @Query(value = """
+select s.id, s.sentence, s.translate
+from vocabulary_sentence vs, sentence s
+where vs.vocabulary_id = ?1 and s.id = vs.sentence_id
+limit 3
+""", nativeQuery = true)
+    List<SentenceDTO> getSentencesForWord(Integer wordId);
+
+    @Query(value = """
+select DISTINCT S.*
+from sentence S
+join (
+    select VS.sentence_id
+    from vocabulary_sentence VS
+    where VS.vocabulary_id != 6
+    order by random()
+    limit 5
+) sel on S.id = sel.sentence_id
+limit 3
+""", nativeQuery = true)
+    List<SentenceDTO> getRandomSentencesExceptWord(Integer wordId);
+
 }

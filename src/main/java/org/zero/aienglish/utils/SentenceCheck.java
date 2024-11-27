@@ -30,7 +30,7 @@ public class SentenceCheck implements BiFunction<Integer, TaskResultDTO, CheckRe
         log.info("Founded words -> {}", founded.getSentence());
         var resultSentence = taskResult.wordList().stream()
                 .map(WordResponseDTO::getWord)
-                .collect(Collectors.joining(" "));
+                .collect(Collectors.joining(" ")).replaceAll("[,?.`\\\\-]", "");
         log.info("User response words -> {}", resultSentence);
         var correctSentence = founded.getSentence().replaceAll("[,?.`\\-]", "");
         Float answerMark = accuracyCheck.apply(resultSentence, correctSentence);

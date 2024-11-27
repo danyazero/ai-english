@@ -63,7 +63,7 @@ public class ThemeServiceTest {
 
         UserEntity user = new UserEntity();
         user.setId(userId);
-        user.setUsername("user1");
+        user.setFirstName("user1");
 
         ThemeEntity theme = new ThemeEntity();
         theme.setId(themeId_1);

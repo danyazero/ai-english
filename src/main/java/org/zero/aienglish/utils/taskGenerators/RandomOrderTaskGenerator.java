@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.zero.aienglish.mapper.TenseMapper;
 import org.zero.aienglish.model.*;
+import org.zero.aienglish.service.SentenceService;
 import org.zero.aienglish.utils.SentenceCheck;
-import org.zero.aienglish.utils.SentenceDetailsExtractor;
 
 import java.util.Collections;
 
@@ -16,7 +16,7 @@ import java.util.Collections;
 public class RandomOrderTaskGenerator implements TaskGenerator {
     private final TenseMapper tenseMapper;
     private final SentenceCheck sentenceCheck;
-    private final SentenceDetailsExtractor sentenceDetailsExtractor;
+    private final SentenceService sentenceService;
 
     @Override
     public TaskType getTaskName() {
@@ -25,7 +25,7 @@ public class RandomOrderTaskGenerator implements TaskGenerator {
 
     @Override
     public SentenceTask generateTask(SentenceDTO selectedSentence) {
-        var sentence = sentenceDetailsExtractor.apply(selectedSentence);
+        var sentence = sentenceService.getSentenceDetails(selectedSentence);
         var tenses = sentence.tenses().stream().map(tenseMapper::map).toList();
         Collections.shuffle(sentence.words());
 

@@ -53,12 +53,12 @@ class SpeechPartTest {
         unknownSpeechPart = new SpeechPartEntity(3, "Unknown", "test", "test");
 
         currentWord = new WordDTO("test", (short) 0, "test", "test", "Noun", false);
-        currentVocabulary = new VocabularyEntity(1, "test", "test", 0, null);
-        currentVocabularyWith = new VocabularyEntity(1, "test", "test", 0, speechPart);
+        currentVocabulary = new VocabularyEntity(1, "test", "test", null);
+        currentVocabularyWith = new VocabularyEntity(1, "test", "test", speechPart);
 
         currentIncorrectWord = new WordDTO("test", (short) 0, "test", "test", "Incorrectoun", false);
-        currentIncorrectVocabulary = new VocabularyEntity(2, "test", "test", 0, null);
-        currentIncorrectVocabularyUnknown = new VocabularyEntity(2, "test", "test", 0, unknownSpeechPart);
+        currentIncorrectVocabulary = new VocabularyEntity(2, "test", "test", null);
+        currentIncorrectVocabularyUnknown = new VocabularyEntity(2, "test", "test", unknownSpeechPart);
 
         speechPartList = new ArrayList<>();
 

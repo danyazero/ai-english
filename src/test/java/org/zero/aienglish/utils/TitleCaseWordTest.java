@@ -13,8 +13,8 @@ class TitleCaseWordTest {
     @BeforeEach
     void setUp() {
         function = new TitleCaseWord();
-        wordNotTitleCase = new VocabularyEntity(1, "test", "test", 0, null);
-        wordTitleCase = new VocabularyEntity(1, "Test", "Test", 0, null);
+        wordNotTitleCase = new VocabularyEntity(1, "test", "test", null);
+        wordTitleCase = new VocabularyEntity(1, "Test", "Test", null);
     }
 
     @Test
@@ -26,7 +26,6 @@ class TitleCaseWordTest {
         Assertions.assertEquals(result.getTranslate(), wordTitleCase.getTranslate());
 
         Assertions.assertEquals(result.getId(), wordNotTitleCase.getId());
-        Assertions.assertEquals(result.getViews(), wordNotTitleCase.getViews());
         Assertions.assertEquals(result.getSpeechPart(), wordNotTitleCase.getSpeechPart());
     }
 
@@ -39,7 +38,6 @@ class TitleCaseWordTest {
         Assertions.assertEquals(result.getTranslate(), wordTitleCase.getTranslate());
 
         Assertions.assertEquals(result.getId(), wordNotTitleCase.getId());
-        Assertions.assertEquals(result.getViews(), wordNotTitleCase.getViews());
         Assertions.assertEquals(result.getSpeechPart(), wordNotTitleCase.getSpeechPart());
     }
 }

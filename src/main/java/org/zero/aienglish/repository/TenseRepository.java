@@ -32,4 +32,5 @@ order by random()
 limit 3;
 """, nativeQuery = true)
     List<Tense> getRandomTenseList(Integer ignore);
+
 }
