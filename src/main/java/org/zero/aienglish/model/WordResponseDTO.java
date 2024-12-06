@@ -1,7 +1,6 @@
 package org.zero.aienglish.model;
 
 import lombok.*;
-import org.zero.aienglish.entity.SpeechPartEntity;
 
 @Getter
 @Setter

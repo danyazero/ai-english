@@ -5,12 +5,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.ThemeEntity;
-import org.zero.aienglish.entity.UserEntity;
-import org.zero.aienglish.entity.UserThemeEntity;
-import org.zero.aienglish.repository.ThemeRepository;
+import org.zero.aienglish.entity.User;
 import org.zero.aienglish.repository.UserRepository;
-import org.zero.aienglish.repository.UserThemeRepository;
 
 import java.util.List;
 
@@ -61,7 +57,7 @@ public class ThemeServiceTest {
         Integer themeId_1 = 1;
         Integer themeId_2 = 2;
 
-        UserEntity user = new UserEntity();
+        User user = new User();
         user.setId(userId);
         user.setFirstName("user1");
 

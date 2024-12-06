@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    username: daniilmozzhukhin
+    password: 1111
+    url: jdbc:postgresql://localhost:5432/english
+security:
+  jwt:
+    refresh-token-secret-key: sessionTokenSecretKey
+    session-token-secret-key: sessionTokenSecretKey
+    token-duration: 10000
+
+ai:
+  credentials:
+    model: mini-4o
+    url: http://localhost:8081/api/random-pair
+    key: 01JAQGMQNV9S31GX2YY40Z5H6G

@@ -1,7 +1,7 @@
 package org.zero.aienglish.model;
 
 import lombok.Builder;
-import org.zero.aienglish.entity.TenseEntity;
+import org.zero.aienglish.entity.Tense;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ public record TaskDTO(
         Integer id,
         String translate,
         String sentence,
-        List<TenseEntity> tenses,
+        List<Tense> tenses,
         List<WordResponseDTO> words
 ) {
 }

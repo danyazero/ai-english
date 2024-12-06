@@ -24,11 +24,6 @@ public class TaskService {
             throw new RequestException("Sentence for task not found.");
         }
 
-        if (isSentenceHasSuitableScore(selectedSentence)) {
-            log.info("Selected words doesnt have score or it less then 90");
-
-            return taskManager.generateTask(TaskType.omittedWord, selectedSentence.get());
-        }
 
         log.info("Selected words is suitable. Selecting generator randomly.");
         return taskManager.generateTaskWithRandomGenerator(selectedSentence.get());
@@ -36,11 +31,5 @@ public class TaskService {
 
     public CheckResult checkTask(Integer userId, TaskResultDTO taskResult) {
         return taskManager.checkResult(userId, taskResult);
-    }
-
-    private static boolean isSentenceHasSuitableScore(Optional<SentenceDTO> selectedSentence) {
-        return selectedSentence.get().getScore() == null
-                || selectedSentence.get().getScore().isNaN()
-                || selectedSentence.get().getScore() < 90.0;
     }
 }

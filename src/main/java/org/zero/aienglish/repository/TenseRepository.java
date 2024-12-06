@@ -2,23 +2,22 @@ package org.zero.aienglish.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.zero.aienglish.entity.TenseEntity;
-import org.zero.aienglish.model.Tense;
+import org.zero.aienglish.entity.Tense;
 
 import java.util.List;
 
-public interface TenseRepository extends JpaRepository<TenseEntity, Integer> {
+public interface TenseRepository extends JpaRepository<Tense, Integer> {
     @Query(value = """
 	select
-	    te.id,\s
-        te.formula,\s
-        te.verb,\s
+	    te.id,
+        te.formula,
+        te.verb,
         concat(ti.title, ' ', du.title) as tense
-    from tense te, time ti, duration du\s
-    where ti.id = te.title_time and du.id = te.title_duration\s
-        and concat(ti.title, ' ', du.title) ilike any(array[?1]);
+    from tense te, time ti, duration du
+    where ti.id = te.time_id and du.id = te.duration_id
+    and concat(ti.title, ' ', du.title) ilike any(array[?1]);
 """, nativeQuery = true)
-    List<Tense> getTenseListByTitle(String[] title);
+    List<org.zero.aienglish.model.Tense> getTenseListByTitle(String[] title);
 
     @Query(value = """
 select
@@ -27,10 +26,10 @@ select
 	t.formula,
 	t.verb
 from tense t, time ti, duration d
-where ti.id = t.title_time and d.id = t.title_duration and t.id != 2
+where ti.id = t.time_id and d.id = t.duration_id and t.id != 2
 order by random()
 limit 3;
 """, nativeQuery = true)
-    List<Tense> getRandomTenseList(Integer ignore);
+    List<org.zero.aienglish.model.Tense> getRandomTenseList(Integer ignore);
 
 }

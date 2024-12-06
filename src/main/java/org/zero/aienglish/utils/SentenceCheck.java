@@ -3,7 +3,7 @@ package org.zero.aienglish.utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.zero.aienglish.entity.SentenceUserHistoryEntity;
+import org.zero.aienglish.entity.SentenceUserHistory;
 import org.zero.aienglish.model.CheckResult;
 import org.zero.aienglish.model.TaskResultDTO;
 import org.zero.aienglish.model.WordResponseDTO;
@@ -36,7 +36,7 @@ public class SentenceCheck implements BiFunction<Integer, TaskResultDTO, CheckRe
         Float answerMark = accuracyCheck.apply(resultSentence, correctSentence);
 
         var user = userRepository.getReferenceById(userId);
-        var answerHistory = SentenceUserHistoryEntity.builder()
+        var answerHistory = SentenceUserHistory.builder()
                 .user(user)
                 .sentence(founded)
                 .lastAnswered(Instant.now())

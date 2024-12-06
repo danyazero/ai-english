@@ -10,16 +10,13 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity(name = "users")
-public class UserEntity {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "first_name")
-    private String firstName;
-    @Column(name = "last_name")
-    private String lastName;
-    private String email;
-    private String picture;
+    private String username;
+    @Column(name = "telegram_id")
+    private Integer telegramId;
     @JsonIgnore
     private String role;
 }

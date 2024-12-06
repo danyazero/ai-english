@@ -2,10 +2,8 @@ package org.zero.aienglish.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.zero.aienglish.entity.VocabularyEntity;
-import org.zero.aienglish.model.UserPrincipal;
+import org.zero.aienglish.entity.Vocabulary;
 import org.zero.aienglish.model.VocabularyWord;
 import org.zero.aienglish.service.VocabularyService;
 
@@ -20,34 +18,30 @@ public class VocabularyController {
 
     @GetMapping("/sentence/{wordId}")
     public VocabularyWord getSentenceVocabularyWord(
-            @PathVariable Integer wordId,
-            @AuthenticationPrincipal UserPrincipal user
+            @PathVariable Integer wordId
     ) {
-        return vocabularyService.getWordForSentence(wordId, user.getId());
+        return vocabularyService.getWordForSentence(wordId, 3);
     }
 
     @GetMapping("/{wordId}")
     public VocabularyWord getVocabularyWord(
-            @PathVariable Integer wordId,
-            @AuthenticationPrincipal UserPrincipal user
+            @PathVariable Integer wordId
             ) {
-        return vocabularyService.getWordForVocabulary(wordId, user.getId());
+        return vocabularyService.getWordForVocabulary(wordId, 3);
     }
 
     @PutMapping("/{wordId}")
     public void saveWordToVocabulary(
-            @PathVariable Integer wordId,
-            @AuthenticationPrincipal UserPrincipal userPrincipal
+            @PathVariable Integer wordId
     ) {
 
-        vocabularyService.saveWordToVocabulary(wordId, userPrincipal.getId());
+        vocabularyService.saveWordToVocabulary(wordId, 3);
     }
 
     @GetMapping
-    public List<VocabularyEntity> getVocabularyWords(
-            @RequestParam(defaultValue = "0", required = false) Integer page,
-            @AuthenticationPrincipal UserPrincipal userPrincipal
+    public List<Vocabulary> getVocabularyWords(
+            @RequestParam(defaultValue = "0", required = false) Integer page
     ) {
-        return vocabularyService.getVocabulary(userPrincipal.getId(), page);
+        return vocabularyService.getVocabulary(3, page);
     }
 }

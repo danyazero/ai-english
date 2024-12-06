@@ -41,7 +41,7 @@ class TenseTaskGeneratorTest {
     @Mock
     private AnswersHistoryRepository sentenceUserHistory;
     @Captor
-    private ArgumentCaptor<SentenceUserHistoryEntity> sentenceUserHistoryArgumentCaptor;
+    private ArgumentCaptor<SentenceUserHistory> sentenceUserHistoryArgumentCaptor;
 
     @InjectMocks
     private TenseTaskGenerator tenseTaskGenerator;
@@ -51,9 +51,9 @@ class TenseTaskGeneratorTest {
     private WordResponseDTO word1;
     private Float mark;
 
-    private UserEntity user;
-    private SentenceEntity sentence;
-    private TenseEntity tense;
+    private User user;
+    private Sentence sentence;
+    private Tense tense;
 
     @BeforeEach
     void setUp() {
@@ -63,11 +63,11 @@ class TenseTaskGeneratorTest {
                 .id(2)
                 .title("Present")
                 .build();
-        var duration = DurationEntity.builder()
+        var duration = Duration.builder()
                 .id(5)
                 .title("Simple")
                 .build();
-        tense = TenseEntity.builder()
+        tense = Tense.builder()
                 .titleTime(time)
                 .titleDuration(duration)
                 .verb("test")
@@ -88,12 +88,12 @@ class TenseTaskGeneratorTest {
                 .build();
         userId = 5;
 
-        sentence = SentenceEntity.builder()
+        sentence = Sentence.builder()
                 .id(2)
                 .translation("test")
                 .sentence("test test2 test3")
                 .build();
-        user = UserEntity.builder()
+        user = User.builder()
                 .firstName("test username")
                 .lastName("test username")
                 .role("USER")

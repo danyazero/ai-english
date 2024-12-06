@@ -9,9 +9,9 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.SentenceEntity;
-import org.zero.aienglish.entity.SentenceUserHistoryEntity;
-import org.zero.aienglish.entity.UserEntity;
+import org.zero.aienglish.entity.Sentence;
+import org.zero.aienglish.entity.SentenceUserHistory;
+import org.zero.aienglish.entity.User;
 import org.zero.aienglish.model.TaskResultDTO;
 import org.zero.aienglish.model.TaskType;
 import org.zero.aienglish.model.WordResponseDTO;
@@ -36,7 +36,7 @@ class SentenceCheckTest {
     @Mock
     private AccuracyCheck accuracyCheck;
     @Captor
-    private ArgumentCaptor<SentenceUserHistoryEntity> sentenceUserHistoryArgumentCaptor;
+    private ArgumentCaptor<SentenceUserHistory> sentenceUserHistoryArgumentCaptor;
 
     @InjectMocks
     private SentenceCheck sentenceCheck;
@@ -48,8 +48,8 @@ class SentenceCheckTest {
     private WordResponseDTO word3;
     private Float mark;
 
-    private UserEntity user;
-    private SentenceEntity sentence;
+    private User user;
+    private Sentence sentence;
 
 
     @BeforeEach
@@ -84,12 +84,12 @@ class SentenceCheckTest {
                 .build();
         userId = 5;
 
-        sentence = SentenceEntity.builder()
+        sentence = Sentence.builder()
                 .id(2)
                 .translation("test")
                 .sentence("test test2 test3")
                 .build();
-        user = UserEntity.builder()
+        user = User.builder()
                 .firstName("test username")
                 .lastName("test username")
                 .email("test@test.com")

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Entity
@@ -11,7 +13,7 @@ import org.hibernate.annotations.ColumnDefault;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "sentence")
-public class SentenceEntity {
+public class Sentence {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -20,14 +22,6 @@ public class SentenceEntity {
     @Column(name = "sentence", nullable = false, length = Integer.MAX_VALUE)
     private String sentence;
 
-    @ColumnDefault("0")
-    @Column(name = "views", nullable = false)
-    private Integer views = 0;
-
     @Column(name = "translate", nullable = false, length = Integer.MAX_VALUE)
     private String translation;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "theme", nullable = false)
-    private ThemeEntity theme;
 }

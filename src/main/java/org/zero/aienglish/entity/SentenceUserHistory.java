@@ -14,7 +14,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "sentence_user_history")
-public class SentenceUserHistoryEntity {
+public class SentenceUserHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -23,11 +23,11 @@ public class SentenceUserHistoryEntity {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sentence_id", nullable = false)
-    private SentenceEntity sentence;
+    private Sentence sentence;
 
     @NotNull
     @ColumnDefault("now()")
-    @Column(name = "last_answered", nullable = false)
+    @Column(name = "answered", nullable = false)
     private Instant lastAnswered;
 
     @NotNull
@@ -36,6 +36,6 @@ public class SentenceUserHistoryEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private UserEntity user;
+    private User user;
 
 }

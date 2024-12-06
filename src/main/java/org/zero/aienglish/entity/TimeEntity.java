@@ -13,7 +13,6 @@ import lombok.*;
 public class TimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
     private Integer id;
 
     @Column(name = "title", nullable = false, length = 16)

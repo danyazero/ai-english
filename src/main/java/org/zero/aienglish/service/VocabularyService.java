@@ -5,13 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.zero.aienglish.entity.UserVocabulary;
-import org.zero.aienglish.entity.VocabularyEntity;
+import org.zero.aienglish.entity.Vocabulary;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.SentenceMapper;
 import org.zero.aienglish.model.VocabularyWord;
 import org.zero.aienglish.repository.*;
 
-import java.time.Instant;
 import java.util.List;
 
 @Slf4j
@@ -25,7 +24,7 @@ public class VocabularyService {
     private final SentenceMapper sentenceMapper;
     private final UserRepository userRepository;
 
-    public List<VocabularyEntity> getVocabulary(Integer userId, Integer page) {
+    public List<Vocabulary> getVocabulary(Integer userId, Integer page) {
         var pageObject = PageRequest.of(page, 10);
 
         return userVocabularyRepository.getAllByUser_Id(userId, pageObject).stream()
@@ -44,8 +43,6 @@ public class VocabularyService {
         var newWord = UserVocabulary.builder()
                 .user(userReference)
                 .word(sentenceWord.get().getVocabulary())
-                .lastSeen(Instant.now())
-                .known(false)
                 .build();
 
         userVocabularyRepository.save(newWord);
@@ -74,7 +71,7 @@ public class VocabularyService {
         return getVocabularyWord(vocabularyWord.get(), userId);
     }
 
-    private VocabularyWord getVocabularyWord(VocabularyEntity word, Integer userId) {
+    private VocabularyWord getVocabularyWord(Vocabulary word, Integer userId) {
         var sentenceList = sentenceRepository.getSentencesForWord(word.getId()).stream()
                 .map(sentenceMapper::map)
                 .toList();

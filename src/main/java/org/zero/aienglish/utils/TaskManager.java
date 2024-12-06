@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class TaskManager {
-    private Map<TaskType, TaskGenerator> taskMap;
+    private final Map<TaskType, TaskGenerator> taskMap;
 
     public TaskManager(List<TaskGenerator> taskList) {
         taskMap = taskList.stream().collect(Collectors.toMap(TaskGenerator::getTaskName, Function.identity()));

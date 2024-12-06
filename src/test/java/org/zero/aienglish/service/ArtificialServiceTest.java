@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Validator;
 import org.springframework.web.client.RestTemplate;
-import org.zero.aienglish.config.OpenAIConfig;
 import org.zero.aienglish.exception.SentenceUpdateException;
 import org.zero.aienglish.model.*;
 

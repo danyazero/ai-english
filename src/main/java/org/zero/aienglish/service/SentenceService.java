@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 import org.zero.aienglish.entity.*;
+import org.zero.aienglish.entity.Sentence;
+import org.zero.aienglish.entity.VocabularySentence;
 import org.zero.aienglish.exception.DataIncorrectException;
 import org.zero.aienglish.exception.NotFoundException;
 import org.zero.aienglish.exception.RequestException;
@@ -32,7 +34,6 @@ public class SentenceService {
     private final SpeechPart speechPart;
     private final TitleCaseWord titleCaseWord;
     private final SentenceMapper sentenceMapper;
-    private final ThemeRepository themeRepository;
     private final TenseRepository tenseRepository;
     private final SpeechRepository speechRepository;
     private final SentenceRepository sentenceRepository;
@@ -51,19 +52,10 @@ public class SentenceService {
         }
 
         log.info("Sentence: {}, word list: {}", sentence, sentence.vocabulary());
-        var theme = getThemeIfExist(themeId);
         var tense = getTenseIfExist(sentence);
         isSentenceAlreadyExists(sentence);
 
         var mappedSentence = sentenceMapper.map(sentence);
-
-        theme.ifPresentOrElse(
-                mappedSentence::setTheme,
-                () -> {
-                    log.info("Theme is provided but not found");
-                    throw new RequestException("Theme not found");
-                });
-
 
         var vocabularyList = getVocabularyList(sentence.vocabulary());
         log.info("Getted vocabulary list size -> {}", vocabularyList.size());
@@ -76,7 +68,7 @@ public class SentenceService {
         sentenceTenseRepository.saveAll(tenseReferanceList);
 
         var vocabularyListSaved = vocabularyRepository.saveAll(vocabularyList);
-        log.info("Saved vocabulary list: {}", vocabularyListSaved.stream().map(VocabularyEntity::getWord).toList());
+        log.info("Saved vocabulary list: {}", vocabularyListSaved.stream().map(Vocabulary::getWord).toList());
 
         var vocabularySentenceList = getVocabularySentenceList(vocabularyListSaved, sentenceSaved, sentence.vocabulary());
         vocabularySentenceRepository.saveAll(vocabularySentenceList);
@@ -85,7 +77,7 @@ public class SentenceService {
     public TaskDTO getSentenceDetails(SentenceDTO selectedSentence) {
         var tenseList = sentenceTenseRepository.findAllBySentenceId(selectedSentence.getId())
                 .stream()
-                .map(SentenceTenseEntity::getTense)
+                .map(SentenceTense::getTense)
                 .toList();
         log.info("For sentence with id -> {}, successfully retrieved tense list with size -> {}",
                 selectedSentence.getId(), tenseList.size());
@@ -104,7 +96,7 @@ public class SentenceService {
     }
 
 
-    public List<VocabularyEntity> getVocabularyList(List<WordDTO> wordList) {
+    public List<Vocabulary> getVocabularyList(List<WordDTO> wordList) {
         var speechPartArray = getSpeechPartArray(wordList);
         log.info("Speech part array retrieved");
 
@@ -121,7 +113,7 @@ public class SentenceService {
 
         return wordList.stream()
                 .map(element -> {
-                    Optional<VocabularyEntity> vocabulary = wordExistCheck(alreadyExistedWords, element);
+                    Optional<Vocabulary> vocabulary = wordExistCheck(alreadyExistedWords, element);
                     return vocabulary.orElseGet(() -> speechPart.apply(element, speechPartList));
                 })
                 .filter(Objects::nonNull)
@@ -129,9 +121,9 @@ public class SentenceService {
                 .toList();
     }
 
-    private static List<VocabularySentenceEntity> getVocabularySentenceList(
-            List<VocabularyEntity> vocabularyListSaved,
-            SentenceEntity sentenceSaved,
+    private static List<VocabularySentence> getVocabularySentenceList(
+            List<Vocabulary> vocabularyListSaved,
+            Sentence sentenceSaved,
             List<WordDTO> vocabulary) {
         log.info("Casting into vocabulary list");
         return vocabularyListSaved.stream()
@@ -139,12 +131,12 @@ public class SentenceService {
                     var foundedWord = getWordByTitle(vocabulary, element);
                     if (foundedWord.isEmpty()) {
                         log.warn("For current word {} not found", element.getWord());
-                        return new VocabularySentenceEntity(sentenceSaved, element);
+                        return new VocabularySentence(sentenceSaved, element);
                     }
                     vocabulary.remove(foundedWord.get());
                     log.info("For current word {} founded -> {}, {}", element.getWord(), foundedWord.get().getWord(), foundedWord.get().getOrder());
 
-                    return VocabularySentenceEntity.builder()
+                    return VocabularySentence.builder()
                             .sentence(sentenceSaved)
                             .vocabulary(element)
                             .order(foundedWord.get().getOrder())
@@ -156,8 +148,8 @@ public class SentenceService {
                 .toList();
     }
 
-    private Optional<VocabularyEntity> wordExistCheck(
-            List<VocabularyEntity> alreadyExistedWords,
+    private Optional<Vocabulary> wordExistCheck(
+            List<Vocabulary> alreadyExistedWords,
             WordDTO currentWord
     ) {
         return alreadyExistedWords.stream()
@@ -167,26 +159,20 @@ public class SentenceService {
 
     }
 
-    private List<SentenceTenseEntity> getTenseReferenceList(List<Tense> tense, SentenceEntity sentenceSaved) {
+    private List<SentenceTense> getTenseReferenceList(List<Tense> tense, Sentence sentenceSaved) {
         return tense.stream()
                 .map(t -> tenseRepository.getReferenceById(t.getId()))
-                .map(t -> new SentenceTenseEntity(t, sentenceSaved))
+                .map(t -> new SentenceTense(t, sentenceSaved))
                 .toList();
     }
 
-    private List<Tense> getTenseIfExist(Sentence sentence) {
+    private List<Tense> getTenseIfExist(org.zero.aienglish.model.Sentence sentence) {
         return Optional.ofNullable(sentence.sentenceTense())
                 .map(tenseRepository::getTenseListByTitle)
                 .orElseThrow(() -> new NotFoundException("Tense not found"));
     }
 
-    private Optional<ThemeEntity> getThemeIfExist(Integer themeId) {
-        return Optional.of(themeId)
-                .map(themeRepository::findById)
-                .orElseThrow(() -> new RequestException("Theme not found"));
-    }
-
-    private void isSentenceAlreadyExists(Sentence sentence) {
+    private void isSentenceAlreadyExists(org.zero.aienglish.model.Sentence sentence) {
         sentenceRepository.findFirstBySentenceLikeIgnoreCase(sentence.sentence())
                 .ifPresent(s -> { throw new RequestException("Sentence already exists"); });
     }
@@ -201,7 +187,7 @@ public class SentenceService {
         return wordList.stream().map(WordDTO::getDefaultWord).toArray(String[]::new);
     }
 
-    private static Optional<WordDTO> getWordByTitle(List<WordDTO> vocabulary, VocabularyEntity element) {
+    private static Optional<WordDTO> getWordByTitle(List<WordDTO> vocabulary, Vocabulary element) {
         return vocabulary.stream().filter(word -> element.getWord().equalsIgnoreCase(word.getWord())).findFirst();
     }
 }

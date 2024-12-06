@@ -8,13 +8,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.zero.aienglish.entity.*;
+import org.zero.aienglish.entity.Sentence;
+import org.zero.aienglish.entity.Tense;
+import org.zero.aienglish.entity.VocabularySentence;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.*;
-import org.zero.aienglish.utils.TaskManager;
 import org.zero.aienglish.utils.TitleCaseWord;
-import org.zero.aienglish.utils.SpeechPart;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ class SentenceServiceTest {
     @Mock
     private SpeechRepository speechRepository;
     @Mock
-    private SpeechPart getVocabularySpeechPart;
+    private org.zero.aienglish.utils.SpeechPart getVocabularySpeechPart;
     @Mock
     private VocabularyRepository vocabularyRepository;
     @Mock
@@ -47,18 +48,18 @@ class SentenceServiceTest {
     private final String speechPartSecond = "Verb";
     private WordDTO wordFirst;
     private WordDTO wordSecond;
-    private SpeechPartEntity speechPartObjectFirst;
-    private SpeechPartEntity speechPartObjectSecond;
-    private VocabularyEntity vocabularyFirst;
-    private VocabularyEntity vocabularySecond;
-    private VocabularyEntity vocabularyFirstTitle;
-    private VocabularyEntity vocabularySecondTitle;
+    private SpeechPart speechPartObjectFirst;
+    private SpeechPart speechPartObjectSecond;
+    private Vocabulary vocabularyFirst;
+    private Vocabulary vocabularySecond;
+    private Vocabulary vocabularyFirstTitle;
+    private Vocabulary vocabularySecondTitle;
 
     private final int userId = 3;
     private final float acceptableAccuracy = 100.0F;
-    private SentenceEntity sentence;
-    private UserEntity user;
-    private SentenceUserHistoryEntity history;
+    private Sentence sentence;
+    private User user;
+    private SentenceUserHistory history;
     private final String correctSentence = "test test_1";
     private TaskResultDTO taskResult;
     private WordResponseDTO word1;
@@ -66,9 +67,9 @@ class SentenceServiceTest {
     private WordResponseDTO word_2;
 
     private SentenceDTO sentenceDTO;
-    private SentenceTenseEntity sentenceTense;
-    private VocabularySentenceEntity vocabularySentence;
-    private VocabularyEntity vocabulary;
+    private SentenceTense sentenceTense;
+    private VocabularySentence vocabularySentence;
+    private Vocabulary vocabulary;
     private TaskDTO taskDTO;
 
     @BeforeEach
@@ -97,16 +98,16 @@ class SentenceServiceTest {
         wordFirst = new WordDTO("Test", (short) 0, "Test", "test_translated", speechPartFirst, false);
         wordSecond = new WordDTO("Test_1", (short) 1, "Test", "test_translated_1", speechPartSecond, false);
 
-        speechPartObjectFirst = new SpeechPartEntity(1, speechPartFirst, speechPartFirst, speechPartFirst);
-        speechPartObjectSecond = new SpeechPartEntity(2, speechPartSecond, speechPartSecond, speechPartSecond);
+        speechPartObjectFirst = new SpeechPart(1, speechPartFirst, speechPartFirst, speechPartFirst);
+        speechPartObjectSecond = new SpeechPart(2, speechPartSecond, speechPartSecond, speechPartSecond);
 
-        vocabularyFirst = new VocabularyEntity(null, "test", "test_translated", speechPartObjectFirst);
-        vocabularySecond = new VocabularyEntity(null, "test_1", "test_translated_1", speechPartObjectSecond);
+        vocabularyFirst = new Vocabulary(null, "test", "test_translated", speechPartObjectFirst);
+        vocabularySecond = new Vocabulary(null, "test_1", "test_translated_1", speechPartObjectSecond);
 
-        vocabularyFirstTitle = new VocabularyEntity(null, "Test", "Test_translated", speechPartObjectFirst);
-        vocabularySecondTitle = new VocabularyEntity(null, "Test_1", "Test_translated_1", speechPartObjectSecond);
+        vocabularyFirstTitle = new Vocabulary(null, "Test", "Test_translated", speechPartObjectFirst);
+        vocabularySecondTitle = new Vocabulary(null, "Test_1", "Test_translated_1", speechPartObjectSecond);
 
-        user = UserEntity.builder()
+        user = User.builder()
                 .id(userId)
                 .firstName("danyazero")
                 .lastName("danyazero")
@@ -120,14 +121,14 @@ class SentenceServiceTest {
         List<WordResponseDTO> wordList = List.of(word_1, word_2);
         taskResult = new TaskResultDTO(1, TaskType.omittedWord, wordList);
 
-        sentence = SentenceEntity.builder()
+        sentence = Sentence.builder()
                 .id(1)
                 .views(null)
                 .theme(null)
                 .sentence("test test_1")
                 .translation(correctSentence)
                 .build();
-        history = SentenceUserHistoryEntity.builder()
+        history = SentenceUserHistory.builder()
                 .user(user)
                 .sentence(sentence)
                 .lastAnswered(Instant.now())
@@ -139,24 +140,24 @@ class SentenceServiceTest {
                 .title("Present")
                 .build();
 
-        var duration = DurationEntity.builder()
+        var duration = Duration.builder()
                 .id(5)
                 .title("Simple")
                 .build();
 
-        var tense = TenseEntity.builder()
+        var tense = Tense.builder()
                 .titleTime(time)
                 .titleDuration(duration)
                 .verb("test")
                 .formula("test")
                 .build();
 
-        sentenceTense = SentenceTenseEntity.builder()
+        sentenceTense = SentenceTense.builder()
                 .sentence(sentence)
                 .tense(tense)
                 .build();
 
-        vocabularySentence = VocabularySentenceEntity.builder()
+        vocabularySentence = VocabularySentence.builder()
                 .order((short) 0)
                 .sentence(sentence)
                 .vocabulary(vocabulary)
@@ -178,7 +179,7 @@ class SentenceServiceTest {
     @Test
     void addWordList_Success() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<SpeechPartEntity> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
@@ -204,11 +205,11 @@ class SentenceServiceTest {
     @Test
     void addWordList_WithAlreadyExist() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<SpeechPartEntity> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
+        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst, speechPartObjectSecond);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);
-        List<VocabularyEntity> alreadySavedList = List.of(vocabularySecond);
+        List<Vocabulary> alreadySavedList = List.of(vocabularySecond);
 
 
         when(speechRepository.findByTitle(speechPartArray)).thenReturn(speechPartObjectList);
@@ -227,7 +228,7 @@ class SentenceServiceTest {
     @Test
     void addWordList_SuccessWithInvalidSpeechPart() {
         var wordList = List.of(wordFirst, wordSecond);
-        List<SpeechPartEntity> speechPartObjectList = List.of(speechPartObjectFirst);
+        List<SpeechPart> speechPartObjectList = List.of(speechPartObjectFirst);
 
         var speechPartList = Arrays.asList(speechPartFirst, speechPartSecond);
         String[] speechPartArray = speechPartList.toArray(new String[0]);

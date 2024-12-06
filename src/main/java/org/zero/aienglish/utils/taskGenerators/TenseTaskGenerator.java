@@ -3,8 +3,8 @@ package org.zero.aienglish.utils.taskGenerators;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.zero.aienglish.entity.SentenceUserHistoryEntity;
-import org.zero.aienglish.entity.TenseEntity;
+import org.zero.aienglish.entity.SentenceUserHistory;
+import org.zero.aienglish.entity.Tense;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.TenseMapper;
 import org.zero.aienglish.model.*;
@@ -86,7 +86,7 @@ public class TenseTaskGenerator implements TaskGenerator {
         var resultAccuracy = accuracyCheck.apply(result.wordList().getFirst().getWord(), convertedTenseList);
 
         var user = userRepository.getReferenceById(userId);
-        var answerHistory = SentenceUserHistoryEntity.builder()
+        var answerHistory = SentenceUserHistory.builder()
                 .user(user)
                 .sentence(sentence.get())
                 .lastAnswered(Instant.now())
@@ -101,14 +101,14 @@ public class TenseTaskGenerator implements TaskGenerator {
                 .build();
     }
 
-    private static String getTenseTitle(List<TenseEntity> tense) {
+    private static String getTenseTitle(List<Tense> tense) {
         var correctTenseTitle = tense.stream()
                 .map(mapTenseDTO())
                 .toArray(String[]::new);
         return String.join(", ", correctTenseTitle);
     }
 
-    private static Function<TenseEntity, String> mapTenseDTO() {
+    private static Function<Tense, String> mapTenseDTO() {
         return tense ->  tense.getTitleTime().getTitle() + " " + tense.getTitleDuration().getTitle();
     }
 }

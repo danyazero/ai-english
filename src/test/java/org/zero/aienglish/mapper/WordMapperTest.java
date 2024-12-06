@@ -4,17 +4,17 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.zero.aienglish.entity.SpeechPartEntity;
-import org.zero.aienglish.entity.VocabularyEntity;
-import org.zero.aienglish.entity.VocabularySentenceEntity;
+import org.zero.aienglish.entity.SpeechPart;
+import org.zero.aienglish.entity.Vocabulary;
+import org.zero.aienglish.entity.VocabularySentence;
 import org.zero.aienglish.model.SentenceDTO;
 import org.zero.aienglish.model.VocabularyDTO;
 
 class WordMapperTest {
     private WordMapper wordMapper;
-    private SpeechPartEntity speechPart;
+    private SpeechPart speechPart;
     private VocabularyDTO vocabularyDTO;
-    private VocabularySentenceEntity vocabularySentence;
+    private VocabularySentence vocabularySentence;
     private SentenceDTO sentenceDTO;
 
     @BeforeEach
@@ -43,19 +43,19 @@ class WordMapperTest {
             }
         };
 
-        speechPart = new SpeechPartEntity();
+        speechPart = new SpeechPart();
         speechPart.setId(null);
         speechPart.setTitle("Noun");
         speechPart.setAnswersTo("test answers to");
         speechPart.setTranslate("test translate");
 
-        var vocabulary = new VocabularyEntity();
+        var vocabulary = new Vocabulary();
         vocabulary.setId(2);
         vocabulary.setWord("Test");
         vocabulary.setTranslate("Translate");
         vocabulary.setSpeechPart(speechPart);
 
-        vocabularySentence = new VocabularySentenceEntity();
+        vocabularySentence = new VocabularySentence();
         vocabularySentence.setSentence(null);
         vocabularySentence.setVocabulary(vocabulary);
         vocabularySentence.setDefaultWord("Default word");

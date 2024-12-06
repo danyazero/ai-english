@@ -2,16 +2,16 @@ package org.zero.aienglish.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.zero.aienglish.entity.VocabularySentenceEntity;
+import org.zero.aienglish.entity.VocabularySentence;
 import org.zero.aienglish.model.VocabularyDTO;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface VocabularySentenceRepository extends JpaRepository<VocabularySentenceEntity, Integer> {
-    List<VocabularySentenceEntity> getAllBySentenceIdOrderByOrder(Integer id);
+public interface VocabularySentenceRepository extends JpaRepository<VocabularySentence, Integer> {
+    List<VocabularySentence> getAllBySentenceIdOrderByOrder(Integer id);
 
-    Optional<VocabularySentenceEntity> findFirstById(Integer id);
+    Optional<VocabularySentence> findFirstById(Integer id);
 
 
     @Query(value = """

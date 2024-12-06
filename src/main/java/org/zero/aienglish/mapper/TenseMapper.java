@@ -3,14 +3,14 @@ package org.zero.aienglish.mapper;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.zero.aienglish.entity.TenseEntity;
+import org.zero.aienglish.entity.Tense;
 import org.zero.aienglish.model.TenseDTO;
 import org.zero.aienglish.model.WordResponseDTO;
 
 @Mapper(builder = @Builder(disableBuilder = true))
 public interface TenseMapper {
     @Mapping(target = "tense", expression = "java(tense.getTitleTime().getTitle() + \" \" + tense.getTitleDuration().getTitle())")
-    TenseDTO map(TenseEntity tense);
+    TenseDTO map(Tense tense);
 
     TenseDTO map(org.zero.aienglish.model.Tense tense);
 

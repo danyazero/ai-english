@@ -7,8 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.zero.aienglish.entity.SpeechPartEntity;
-import org.zero.aienglish.entity.VocabularyEntity;
+import org.zero.aienglish.entity.SpeechPart;
+import org.zero.aienglish.entity.Vocabulary;
 import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.WordDTO;
 import org.zero.aienglish.repository.SpeechRepository;
@@ -31,34 +31,34 @@ class SpeechPartTest {
     private SpeechRepository speechRepository;
 
     @InjectMocks
-    private SpeechPart speechPartSer;
+    private org.zero.aienglish.utils.SpeechPart speechPartSer;
 
     private WordDTO currentWord;
-    private VocabularyEntity currentVocabulary;
-    private VocabularyEntity currentVocabularyWith;
+    private Vocabulary currentVocabulary;
+    private Vocabulary currentVocabularyWith;
     private WordDTO currentIncorrectWord;
-    private VocabularyEntity currentIncorrectVocabulary;
-    private VocabularyEntity currentIncorrectVocabularyUnknown;
+    private Vocabulary currentIncorrectVocabulary;
+    private Vocabulary currentIncorrectVocabularyUnknown;
 
-    private List<SpeechPartEntity> speechPartList;
+    private List<SpeechPart> speechPartList;
 
-    private SpeechPartEntity speechPartSecond;
-    private SpeechPartEntity speechPart;
-    private SpeechPartEntity unknownSpeechPart;
+    private org.zero.aienglish.entity.SpeechPart speechPartSecond;
+    private org.zero.aienglish.entity.SpeechPart speechPart;
+    private org.zero.aienglish.entity.SpeechPart unknownSpeechPart;
 
     @BeforeEach
     void setUp() {
-        speechPart = new SpeechPartEntity(1, "Noun", "test", "test");
-        speechPartSecond = new SpeechPartEntity(2, "Pronoun", "test", "test");
-        unknownSpeechPart = new SpeechPartEntity(3, "Unknown", "test", "test");
+        speechPart = new org.zero.aienglish.entity.SpeechPart(1, "Noun", "test", "test");
+        speechPartSecond = new org.zero.aienglish.entity.SpeechPart(2, "Pronoun", "test", "test");
+        unknownSpeechPart = new org.zero.aienglish.entity.SpeechPart(3, "Unknown", "test", "test");
 
         currentWord = new WordDTO("test", (short) 0, "test", "test", "Noun", false);
-        currentVocabulary = new VocabularyEntity(1, "test", "test", null);
-        currentVocabularyWith = new VocabularyEntity(1, "test", "test", speechPart);
+        currentVocabulary = new Vocabulary(1, "test", "test", null);
+        currentVocabularyWith = new Vocabulary(1, "test", "test", speechPart);
 
         currentIncorrectWord = new WordDTO("test", (short) 0, "test", "test", "Incorrectoun", false);
-        currentIncorrectVocabulary = new VocabularyEntity(2, "test", "test", null);
-        currentIncorrectVocabularyUnknown = new VocabularyEntity(2, "test", "test", unknownSpeechPart);
+        currentIncorrectVocabulary = new Vocabulary(2, "test", "test", null);
+        currentIncorrectVocabularyUnknown = new Vocabulary(2, "test", "test", unknownSpeechPart);
 
         speechPartList = new ArrayList<>();
 

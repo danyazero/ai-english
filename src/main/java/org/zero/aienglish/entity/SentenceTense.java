@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "sentence_tense")
-public class SentenceTenseEntity {
+public class SentenceTense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -18,15 +18,15 @@ public class SentenceTenseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sentence_id", nullable = false)
-    private SentenceEntity sentence;
+    private Sentence sentence;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "tense_id", nullable = false)
-    private TenseEntity tense;
+    private Tense tense;
 
-    public SentenceTenseEntity(
-            TenseEntity tense,
-            SentenceEntity sentence
+    public SentenceTense(
+            Tense tense,
+            Sentence sentence
     ) {
         this.tense = tense;
         this.sentence = sentence;

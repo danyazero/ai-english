@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.zero.aienglish.entity.DurationEntity;
-import org.zero.aienglish.entity.TenseEntity;
+import org.zero.aienglish.entity.Duration;
+import org.zero.aienglish.entity.Tense;
 import org.zero.aienglish.entity.TimeEntity;
 import org.zero.aienglish.model.TenseDTO;
 
@@ -13,13 +13,13 @@ class TenseMapperTest {
     private TenseMapper tenseMapper;
     private TenseDTO tenseDTO;
     private org.zero.aienglish.model.Tense tense;
-    private TenseEntity tenseEntity;
+    private Tense tenseEntity;
 
     @BeforeEach
     void setUp() {
         tenseMapper = new TenseMapperImpl();
 
-        var duration = new DurationEntity();
+        var duration = new Duration();
         duration.setId(1);
         duration.setTitle("Simple");
 
@@ -27,7 +27,7 @@ class TenseMapperTest {
         time.setId(1);
         time.setTitle("Present");
 
-        tenseEntity = new TenseEntity();
+        tenseEntity = new Tense();
         tenseEntity.setId(1);
         tenseEntity.setVerb("test");
         tenseEntity.setFormula("test + test");

@@ -10,18 +10,18 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "tense")
-public class TenseEntity {
+public class Tense {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "title_duration", nullable = false)
-    private DurationEntity titleDuration;
+    @JoinColumn(name = "duration_id", nullable = false)
+    private Duration titleDuration;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "title_time", nullable = false)
+    @JoinColumn(name = "time_id", nullable = false)
     private TimeEntity titleTime;
 
     @Column(name = "formula", nullable = false, length = Integer.MAX_VALUE)

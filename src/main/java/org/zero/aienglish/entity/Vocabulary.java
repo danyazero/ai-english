@@ -3,7 +3,6 @@ package org.zero.aienglish.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 @Getter
 @Setter
@@ -12,7 +11,7 @@ import org.hibernate.annotations.ColumnDefault;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "vocabulary")
-public class VocabularyEntity {
+public class Vocabulary {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -27,6 +26,5 @@ public class VocabularyEntity {
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "speech_part_id", nullable = false)
-    private SpeechPartEntity speechPart;
-
+    private SpeechPart speechPart;
 }
