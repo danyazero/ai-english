@@ -8,4 +8,5 @@ import org.zero.aienglish.model.PairDTO;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
+    User findFirstByTelegramId(Long telegramId);
 }

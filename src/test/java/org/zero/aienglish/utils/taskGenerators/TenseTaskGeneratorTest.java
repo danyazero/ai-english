@@ -15,7 +15,7 @@ import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.model.TaskResultDTO;
 import org.zero.aienglish.model.TaskType;
 import org.zero.aienglish.model.WordResponseDTO;
-import org.zero.aienglish.repository.AnswersHistoryRepository;
+import org.zero.aienglish.repository.SentenceHistoryRepository;
 import org.zero.aienglish.repository.SentenceRepository;
 import org.zero.aienglish.repository.SentenceTenseRepository;
 import org.zero.aienglish.repository.UserRepository;
@@ -39,9 +39,9 @@ class TenseTaskGeneratorTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private AnswersHistoryRepository sentenceUserHistory;
+    private SentenceHistoryRepository sentenceUserHistory;
     @Captor
-    private ArgumentCaptor<SentenceUserHistory> sentenceUserHistoryArgumentCaptor;
+    private ArgumentCaptor<SentenceHistory> sentenceUserHistoryArgumentCaptor;
 
     @InjectMocks
     private TenseTaskGenerator tenseTaskGenerator;

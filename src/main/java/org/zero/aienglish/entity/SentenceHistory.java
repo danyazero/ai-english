@@ -13,8 +13,8 @@ import java.time.Instant;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "sentence_user_history")
-public class SentenceUserHistory {
+@Table(name = "sentence_history")
+public class SentenceHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -27,15 +27,16 @@ public class SentenceUserHistory {
 
     @NotNull
     @ColumnDefault("now()")
-    @Column(name = "answered", nullable = false)
-    private Instant lastAnswered;
-
-    @NotNull
-    @Column(name = "accuracy", nullable = false)
-    private Double accuracy;
+    @Column(name = "at", nullable = false)
+    private Instant at;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "status", nullable = false)
+    private Status status;
 
 }

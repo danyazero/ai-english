@@ -16,7 +16,7 @@ public class User {
     private Integer id;
     private String username;
     @Column(name = "telegram_id")
-    private Integer telegramId;
+    private Long telegramId;
     @JsonIgnore
     private String role;
 }

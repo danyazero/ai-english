@@ -3,7 +3,7 @@ package org.zero.aienglish.utils.taskGenerators;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.zero.aienglish.entity.SentenceUserHistory;
+import org.zero.aienglish.entity.SentenceHistory;
 import org.zero.aienglish.entity.Tense;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.TenseMapper;
@@ -29,7 +29,7 @@ public class TenseTaskGenerator implements TaskGenerator {
     private final SentenceService sentenceService;
     private final SentenceRepository sentenceRepository;
     private final SentenceTenseRepository sentenceTenseRepository;
-    private final AnswersHistoryRepository answersHistoryRepository;
+    private final SentenceHistoryRepository answersHistoryRepository;
 
     @Override
     public TaskType getTaskName() {
@@ -86,11 +86,10 @@ public class TenseTaskGenerator implements TaskGenerator {
         var resultAccuracy = accuracyCheck.apply(result.wordList().getFirst().getWord(), convertedTenseList);
 
         var user = userRepository.getReferenceById(userId);
-        var answerHistory = SentenceUserHistory.builder()
+        var answerHistory = SentenceHistory.builder()
                 .user(user)
                 .sentence(sentence.get())
-                .lastAnswered(Instant.now())
-                .accuracy(resultAccuracy.doubleValue())
+                .at(Instant.now())
                 .build();
         answersHistoryRepository.save(answerHistory);
 

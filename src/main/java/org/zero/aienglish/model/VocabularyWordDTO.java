@@ -5,7 +5,5 @@ public interface VocabularyWordDTO {
     String getWord();
     String getTranslate();
     String getSpeechPartTitle();
-    String getSpeechPartTranslate();
-    String getSpeechPartAnswers();
 
 }

@@ -11,9 +11,8 @@ import java.util.Optional;
 public interface VocabularySentenceRepository extends JpaRepository<VocabularySentence, Integer> {
     List<VocabularySentence> getAllBySentenceIdOrderByOrder(Integer id);
 
-    Optional<VocabularySentence> findFirstById(Integer id);
 
-
+    List<VocabularySentence> getAllByVocabulary_Id(Integer id);
     @Query(value = """
 SELECT
     V.id,

@@ -10,12 +10,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.zero.aienglish.entity.Sentence;
-import org.zero.aienglish.entity.SentenceUserHistory;
+import org.zero.aienglish.entity.SentenceHistory;
 import org.zero.aienglish.entity.User;
 import org.zero.aienglish.model.TaskResultDTO;
 import org.zero.aienglish.model.TaskType;
 import org.zero.aienglish.model.WordResponseDTO;
-import org.zero.aienglish.repository.AnswersHistoryRepository;
+import org.zero.aienglish.repository.SentenceHistoryRepository;
 import org.zero.aienglish.repository.SentenceRepository;
 import org.zero.aienglish.repository.UserRepository;
 
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SentenceCheckTest {
     @Mock
-    private AnswersHistoryRepository answersHistoryRepository;
+    private SentenceHistoryRepository answersHistoryRepository;
     @Mock
     private SentenceRepository sentenceRepository;
     @Mock
@@ -36,7 +36,7 @@ class SentenceCheckTest {
     @Mock
     private AccuracyCheck accuracyCheck;
     @Captor
-    private ArgumentCaptor<SentenceUserHistory> sentenceUserHistoryArgumentCaptor;
+    private ArgumentCaptor<SentenceHistory> sentenceUserHistoryArgumentCaptor;
 
     @InjectMocks
     private SentenceCheck sentenceCheck;

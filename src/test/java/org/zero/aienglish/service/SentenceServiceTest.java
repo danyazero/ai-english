@@ -59,7 +59,7 @@ class SentenceServiceTest {
     private final float acceptableAccuracy = 100.0F;
     private Sentence sentence;
     private User user;
-    private SentenceUserHistory history;
+    private SentenceHistory history;
     private final String correctSentence = "test test_1";
     private TaskResultDTO taskResult;
     private WordResponseDTO word1;
@@ -128,7 +128,7 @@ class SentenceServiceTest {
                 .sentence("test test_1")
                 .translation(correctSentence)
                 .build();
-        history = SentenceUserHistory.builder()
+        history = SentenceHistory.builder()
                 .user(user)
                 .sentence(sentence)
                 .lastAnswered(Instant.now())

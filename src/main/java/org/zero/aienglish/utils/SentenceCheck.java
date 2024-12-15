@@ -3,11 +3,11 @@ package org.zero.aienglish.utils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.zero.aienglish.entity.SentenceUserHistory;
+import org.zero.aienglish.entity.SentenceHistory;
 import org.zero.aienglish.model.CheckResult;
 import org.zero.aienglish.model.TaskResultDTO;
 import org.zero.aienglish.model.WordResponseDTO;
-import org.zero.aienglish.repository.AnswersHistoryRepository;
+import org.zero.aienglish.repository.SentenceHistoryRepository;
 import org.zero.aienglish.repository.SentenceRepository;
 import org.zero.aienglish.repository.UserRepository;
 
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class SentenceCheck implements BiFunction<Integer, TaskResultDTO, CheckResult> {
-    private final AnswersHistoryRepository answersHistoryRepository;
+    private final SentenceHistoryRepository answersHistoryRepository;
     private final SentenceRepository sentenceRepository;
     private final UserRepository userRepository;
     private final AccuracyCheck accuracyCheck;
@@ -36,11 +36,10 @@ public class SentenceCheck implements BiFunction<Integer, TaskResultDTO, CheckRe
         Float answerMark = accuracyCheck.apply(resultSentence, correctSentence);
 
         var user = userRepository.getReferenceById(userId);
-        var answerHistory = SentenceUserHistory.builder()
+        var answerHistory = SentenceHistory.builder()
                 .user(user)
                 .sentence(founded)
-                .lastAnswered(Instant.now())
-                .accuracy(answerMark.doubleValue())
+                .at(Instant.now())
                 .build();
         answersHistoryRepository.save(answerHistory);
 
