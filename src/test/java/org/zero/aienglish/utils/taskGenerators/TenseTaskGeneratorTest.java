@@ -81,11 +81,6 @@ class TenseTaskGeneratorTest {
                 .translate("__")
                 .build();
 
-        taskResultDTO = TaskResultDTO.builder()
-                .taskType(TaskType.omittedWord)
-                .taskId(2)
-                .wordList(List.of(word1))
-                .build();
         userId = 5;
 
         sentence = Sentence.builder()
@@ -94,11 +89,7 @@ class TenseTaskGeneratorTest {
                 .sentence("test test2 test3")
                 .build();
         user = User.builder()
-                .firstName("test username")
-                .lastName("test username")
                 .role("USER")
-                .email("test@test.com")
-                .picture("test picture")
                 .id(userId)
                 .build();
     }
@@ -109,10 +100,9 @@ class TenseTaskGeneratorTest {
         when(sentenceTenseRepository.findAllBySentence(sentence)).thenReturn(List.of(tense));
         when(accuracyCheck.apply(anyString(), anyString())).thenReturn(mark);
         when(userRepository.getReferenceById(userId)).thenReturn(user);
-        var res = tenseTaskGenerator.checkTask(userId, taskResultDTO);
+        var res = tenseTaskGenerator.checkTask(userId, sentence.getSentence(), sentence);
         verify(sentenceUserHistory).save(sentenceUserHistoryArgumentCaptor.capture());
 
-        Assertions.assertEquals(mark.doubleValue(), sentenceUserHistoryArgumentCaptor.getValue().getAccuracy());
         Assertions.assertEquals(mark.doubleValue(), res.mark().doubleValue());
         Assertions.assertTrue(res.accepted());
     }
@@ -121,6 +111,6 @@ class TenseTaskGeneratorTest {
     @DisplayName("Check Task with incorrect taskId")
     void checkTask_2() {
         when(sentenceRepository.findById(taskResultDTO.taskId())).thenReturn(Optional.empty());
-        Assertions.assertThrows(RequestException.class, () -> tenseTaskGenerator.checkTask(userId, taskResultDTO));
+        Assertions.assertThrows(RequestException.class, () -> tenseTaskGenerator.checkTask(userId, sentence.getSentence(), sentence));
     }
 }

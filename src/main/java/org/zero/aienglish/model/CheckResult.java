@@ -5,6 +5,7 @@ import lombok.Builder;
 @Builder
 public record CheckResult(
         Float mark,
-        Boolean accepted
+        Boolean accepted,
+        String correctAnswer
 ) {
 }

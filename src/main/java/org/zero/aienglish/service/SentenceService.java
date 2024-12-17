@@ -90,6 +90,7 @@ public class SentenceService {
         return TaskDTO.builder()
                 .id(selectedSentence.getId())
                 .translate(selectedSentence.getTranslate())
+                .sentence(selectedSentence.getSentence())
                 .tenses(tenseList)
                 .words(vocabulary)
                 .build();

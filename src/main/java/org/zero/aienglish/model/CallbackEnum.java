@@ -5,5 +5,6 @@ public enum CallbackEnum {
     REMOVE,
     ADD_VOCABULARY,
     NEXT_VOCABULRAY,
+    VOCABULARY_PAGE,
     NEXT_TASK;
 }

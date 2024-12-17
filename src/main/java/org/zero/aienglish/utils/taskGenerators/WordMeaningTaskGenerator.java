@@ -3,6 +3,7 @@ package org.zero.aienglish.utils.taskGenerators;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.zero.aienglish.entity.Sentence;
 import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.SentenceRepository;
@@ -17,9 +18,9 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
-public class WordMeaningTaskGenerator implements TaskGenerator {
+public class WordMeaningTaskGenerator extends TaskGenerator {
     private static final String[] speechPartIgnoreList = new String[]{"article", "preposition", "pronoun", "unknown", "gerund", "participle"};
     private final WordMapper wordMapper;
     private final SentenceCheck sentenceCheck;
@@ -28,7 +29,8 @@ public class WordMeaningTaskGenerator implements TaskGenerator {
 
     @Override
     public TaskType getTaskName() {
-        return TaskType.wordMeaning;
+//        return TaskType.wordMeaning;
+        return null;
     }
 
     @Override
@@ -54,15 +56,13 @@ public class WordMeaningTaskGenerator implements TaskGenerator {
                 .sentenceId(selectedSentence.getId())
                 .title(title)
                 .answers(answerSentences)
-                .taskType(TaskType.wordMeaning)
+//                .taskType(TaskType.wordMeaning)
                 .build();
     }
 
     @Override
-    public CheckResult checkTask(Integer userId, TaskResultDTO result) {
-        log.info("task result: {}", result);
-        result.wordList().getFirst().setWord(result.wordList().getFirst().getTranslate());
-        return sentenceCheck.apply(userId, result);
+    public CheckResult checkTask(Integer userId, String result, Sentence sentence) {
+        return null;
     }
 
     private static boolean isWordRelevant(WordResponseDTO word) {

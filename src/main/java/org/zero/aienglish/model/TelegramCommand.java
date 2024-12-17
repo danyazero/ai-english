@@ -1,9 +1,12 @@
 package org.zero.aienglish.model;
 
+import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.List;
+
 public interface TelegramCommand {
     String getName();
-    SendMessage apply(Update update);
+    List<BotApiMethod<?>> apply(Update update);
 }

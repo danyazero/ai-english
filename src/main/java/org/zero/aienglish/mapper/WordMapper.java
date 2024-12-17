@@ -19,10 +19,8 @@ public interface WordMapper {
     @Mapping(target = "speechPart", ignore = true)
     WordDTO map(Vocabulary word);
 
-//    @Mapping(target = "id", source = "vocabulary.id")
     @Mapping(target = "word", source = "defaultWord")
     @Mapping(target = "translate", source = "vocabulary.translate")
-    @Mapping(target = "speechPart", source = "vocabulary.speechPart.title")
     WordResponseDTO map(VocabularySentence vocabulary);
 
 

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.zero.aienglish.model.CallbackEnum;
@@ -25,7 +26,7 @@ public class StartCommand implements TelegramCommand {
     }
 
     @Override
-    public SendMessage apply(Update update) {
+    public List<BotApiMethod<?>> apply(Update update) {
         log.info("Called start command handler for chat -> {}", update.getMessage().getChatId());
         var chatId = update.getMessage().getChatId();
 
@@ -34,10 +35,12 @@ public class StartCommand implements TelegramCommand {
                 new TelegramCallbackButton(CallbackEnum.NEXT_TASK.name(), "Почати практику")
         ));
 
-        return SendMessage.builder()
-                .text(ReplicEnum.START.getValue())
-                .replyMarkup(callbackButtons)
-                .chatId(chatId)
-                .build();
+        return List.of(
+                SendMessage.builder()
+                        .text(ReplicEnum.START.getValue())
+                        .replyMarkup(callbackButtons)
+                        .chatId(chatId)
+                        .build()
+        );
     }
 }

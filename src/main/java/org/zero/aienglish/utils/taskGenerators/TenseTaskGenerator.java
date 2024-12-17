@@ -3,6 +3,7 @@ package org.zero.aienglish.utils.taskGenerators;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.zero.aienglish.entity.Sentence;
 import org.zero.aienglish.entity.SentenceHistory;
 import org.zero.aienglish.entity.Tense;
 import org.zero.aienglish.exception.RequestException;
@@ -21,15 +22,14 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TenseTaskGenerator implements TaskGenerator {
-    private final TenseMapper tenseMapper;
-    private final AccuracyCheck accuracyCheck;
-    private final UserRepository userRepository;
+public class TenseTaskGenerator extends TaskGenerator {
+    private final SentenceHistoryRepository sentenceHistoryRepository;
+    private final SentenceTenseRepository sentenceTenseRepository;
+    private final StatusRepository statusRepository;
     private final TenseRepository tenseRepository;
     private final SentenceService sentenceService;
-    private final SentenceRepository sentenceRepository;
-    private final SentenceTenseRepository sentenceTenseRepository;
-    private final SentenceHistoryRepository answersHistoryRepository;
+    private final AccuracyCheck accuracyCheck;
+    private final TenseMapper tenseMapper;
 
     @Override
     public TaskType getTaskName() {
@@ -67,36 +67,26 @@ public class TenseTaskGenerator implements TaskGenerator {
                 .title(sentenceDetails.sentence())
                 .sentenceId(sentenceDetails.id())
                 .taskType(TaskType.tenseMarkers)
-                .words(sentenceDetails.words())
                 .answers(answers)
                 .tenses(null)
                 .build();
     }
 
     @Override
-    public CheckResult checkTask(Integer userId, TaskResultDTO result) {
+    public CheckResult checkTask(Integer userId, String result, Sentence sentence) {
         log.info("Task completion result -> {}", result);
-        var sentence = sentenceRepository.findById(result.taskId());
-        if (sentence.isEmpty()) {
-            log.warn("Sentence for check not found");
-            throw new RequestException("Sentence for check not found");
-        }
-        var tenseList = sentenceTenseRepository.findAllBySentence(sentence.get());
+        var tenseList = sentenceTenseRepository.findAllBySentence(sentence);
         var convertedTenseList = getTenseTitle(tenseList);
-        var resultAccuracy = accuracyCheck.apply(result.wordList().getFirst().getWord(), convertedTenseList);
+        log.info("Correct answer -> {}, user answer -> {}", convertedTenseList, result);
+        var resultAccuracy = accuracyCheck.apply(result, convertedTenseList);
+        log.info("Check result -> {}", resultAccuracy);
 
-        var user = userRepository.getReferenceById(userId);
-        var answerHistory = SentenceHistory.builder()
-                .user(user)
-                .sentence(sentence.get())
-                .at(Instant.now())
-                .build();
-        answersHistoryRepository.save(answerHistory);
-
+        this.saveTaskLog(resultAccuracy > 98F, userId, statusRepository, sentenceHistoryRepository);
 
         return CheckResult.builder()
                 .mark(resultAccuracy)
                 .accepted(resultAccuracy > 98F)
+                .correctAnswer(convertedTenseList)
                 .build();
     }
 

@@ -18,7 +18,6 @@ SELECT
     V.id,
     VS.default_word as word,
     V.translate as translate,
-    SP.title as speechPart,
     SP.translate as speechPartTranslate,
     SP.answers_to as answersTo
 FROM vocabulary_sentence VS, vocabulary V, speech_part SP

@@ -13,6 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import org.zero.aienglish.config.TelegramProperties;
+import org.zero.aienglish.utils.telegram.HandleText;
 
 import java.util.List;
 
@@ -20,6 +21,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
+    private final HandleText handleText;
     private TelegramClient telegramClient;
     private final TelegramProperties botProperties;
     private final CommandController commandsController;
@@ -37,6 +39,7 @@ public class TelegramBot implements LongPollingSingleThreadUpdateConsumer {
             String chatId = update.getMessage().getChatId().toString();
             log.info("Getted message in chat -> {}", chatId);
             if (update.getMessage().getText().startsWith("/")) sendMessage(commandsController.handle(update));
+            else sendMessage(handleText.apply(update));
         } else if (update.hasCallbackQuery()) {
             log.info("Has callback query -> {}", update.getCallbackQuery().getData().toString());
             sendMessage(callbackController.handle(update));

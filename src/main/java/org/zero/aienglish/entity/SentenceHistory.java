@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.zero.aienglish.model.TaskType;
 
 import java.time.Instant;
 
@@ -21,7 +22,7 @@ public class SentenceHistory {
     private Integer id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "sentence_id", nullable = false)
     private Sentence sentence;
 
@@ -39,4 +40,6 @@ public class SentenceHistory {
     @JoinColumn(name = "status", nullable = false)
     private Status status;
 
+    @Column(name = "task_type", nullable = false)
+    private TaskType taskType;
 }

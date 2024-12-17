@@ -35,7 +35,7 @@ public class CommandController implements TelegramManager {
 
         var commandHandler = commands.get(command);
         if (commandHandler != null) {
-            return List.of(commandHandler.apply(update));
+            return commandHandler.apply(update);
         } else {
             return List.of(new SendMessage(String.valueOf(chatId), "Unknown command: " + command));
         }

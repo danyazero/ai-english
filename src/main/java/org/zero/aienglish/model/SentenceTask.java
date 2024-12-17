@@ -10,7 +10,6 @@ public record SentenceTask(
         TaskType taskType,
         String title,
         List<TenseDTO> tenses,
-        List<WordResponseDTO> words,
         List<WordResponseDTO> answers
 ) {
 }

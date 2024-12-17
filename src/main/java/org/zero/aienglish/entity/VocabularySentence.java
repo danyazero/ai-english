@@ -20,7 +20,7 @@ public class VocabularySentence {
     @JoinColumn(name = "sentence_id", nullable = false)
     private Sentence sentence;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "vocabulary_id", nullable = false)
     private Vocabulary vocabulary;
 

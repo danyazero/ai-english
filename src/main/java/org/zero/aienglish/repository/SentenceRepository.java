@@ -17,14 +17,14 @@ public interface SentenceRepository extends JpaRepository<Sentence, Integer> {
             	S.id,
             	S.translate,
             	S.sentence,
-            	SH.answered,
-                row_number() over (partition by S.id order by SH.answered desc) as rn
+            	SH.at,
+                row_number() over (partition by S.id order by SH.at desc) as rn
                from sentence S
-               left join sentence_user_history SH on SH.user_id = 3 and SH.sentence_id = S.id)
+               left join sentence_history SH on SH.user_id = 3 and SH.sentence_id = S.id)
                        select id, translate, sentence
                        from SentenceHistory
                        where rn = 1
-                       order by answered nulls first
+                       order by at nulls first
                        limit 1;
             """, nativeQuery = true)
     Optional<SentenceDTO> getSentenceForUser(Integer userId);

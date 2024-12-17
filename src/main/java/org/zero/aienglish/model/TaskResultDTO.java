@@ -8,6 +8,6 @@ import java.util.List;
 public record TaskResultDTO(
         Integer taskId,
         TaskType taskType,
-        List<WordResponseDTO> wordList
+        String answer
 ) {
 }
