@@ -8,6 +8,7 @@ import lombok.*;
 @Setter
 @Entity
 @Builder
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "vocabulary")
@@ -20,11 +21,15 @@ public class Vocabulary {
     @Column(name = "word", nullable = false, length = Integer.MAX_VALUE)
     private String word;
 
+    @Column(name = "second", nullable = false, length = Integer.MAX_VALUE)
+    private String secondForm;
+
+    @Column(name = "third", nullable = false, length = Integer.MAX_VALUE)
+    private String thirdForm;
+
     @Column(name = "translate", nullable = false, length = Integer.MAX_VALUE)
     private String translate;
 
-    @JsonIgnore
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "speech_part_id", nullable = false)
-    private SpeechPart speechPart;
+    @Column(name = "meaning", nullable = false, length = Integer.MAX_VALUE)
+    private String meaning = "--";
 }

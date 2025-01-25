@@ -2,28 +2,55 @@ package org.zero.aienglish.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.zero.aienglish.entity.Vocabulary;
 import org.zero.aienglish.entity.VocabularySentence;
+import org.zero.aienglish.model.GrammarDTO;
+import org.zero.aienglish.model.UserWordDTO;
 import org.zero.aienglish.model.VocabularyDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface VocabularySentenceRepository extends JpaRepository<VocabularySentence, Integer> {
+    @Query("select v from VocabularySentence v where v.sentence.id = ?1 and v.vocabulary is not null order by v.order")
     List<VocabularySentence> getAllBySentenceIdOrderByOrder(Integer id);
 
+    List<VocabularySentence> getAllByVocabulary_Id(Integer vocabularyId);
 
-    List<VocabularySentence> getAllByVocabulary_Id(Integer id);
     @Query(value = """
-SELECT
-    V.id,
-    VS.default_word as word,
-    V.translate as translate,
-    SP.translate as speechPartTranslate,
-    SP.answers_to as answersTo
-FROM vocabulary_sentence VS, vocabulary V, speech_part SP
-where V.id = VS.vocabulary_id and SP.id = V.speech_part_id and SP.title not ilike any(array[?3]) and VS.default_word != ?2
-ORDER BY RANDOM()
-LIMIT ?1;
-""", nativeQuery = true)
-    List<VocabularyDTO> getRandomWordList(Integer size, String ignoreWord, String[] ignoreList);
+            select
+            v.*,
+            (uv.id IS NOT NULL) as saved
+            from vocabulary v, vocabulary_sentence vs
+            left join user_vocabulary uv on uv.user_id = ?2 and uv.vocabulary_id = vs.vocabulary_id
+            where vs.sentence_id = ?1 and v.id = vs.vocabulary_id
+            """, nativeQuery = true)
+    List<UserWordDTO> findAllBySentenceId(Integer sentenceId, Integer userId);
+
+    @Query(value = """
+            SELECT
+                vs.sentence_id as id,
+                vs.default_word as defaultWord,
+                lower(v.word) as firstForm,
+                lower(v.second) as secondForm,
+                lower(v.third) as thirdForm,
+                vs.is_modal as isModal
+            FROM vocabulary_sentence vs
+            LEFT JOIN vocabulary v on v.id = vs.vocabulary_id
+            WHERE
+                (vs.sentence_id IN (
+                SELECT
+                    s.id
+                FROM
+                    sentence s
+                WHERE s.id != ?1
+                LIMIT ?2
+                )
+            or vs.sentence_id = ?1)
+            AND vs.is_marker = true
+            order by vs."order"
+            """, nativeQuery = true)
+    List<GrammarDTO> findRandomGrammarWords(Integer ignoreSentenceId, Integer count);
+
+
+    List<VocabularySentence> findAllBySentence_IdAndIsMarkerOrderByOrder(Integer sentenceId, Boolean isMarker);
 }

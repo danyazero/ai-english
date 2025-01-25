@@ -9,7 +9,10 @@ public record SentenceTask(
         Integer sentenceId,
         TaskType taskType,
         String title,
-        List<TenseDTO> tenses,
+        String caption,
+        String pattern,
+        String theme,
+        Integer steps,
         List<WordResponseDTO> answers
 ) {
 }

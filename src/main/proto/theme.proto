@@ -1,0 +1,31 @@
+syntax = "proto3";
+package org.zero.aienglish.lib;
+import "google/protobuf/empty.proto";
+option java_package = "org.zero.aienglish.lib.grpc";
+
+message Theme {
+  int32 id = 1;
+  string title = 2;
+}
+
+message CategoriesResponse {
+  repeated Theme themes = 1;
+}
+
+message ThemesResponse {
+  repeated Theme themes = 1;
+  int32 total_pages = 2;
+  int32 current_page = 3;
+}
+
+message ThemesRequest {
+  int32 category_id = 1;
+  int32 page = 2;
+}
+
+
+
+service ThemeService {
+  rpc getCategories(google.protobuf.Empty) returns (CategoriesResponse) {};
+  rpc getThemes(ThemesRequest) returns (ThemesResponse) {};
+}

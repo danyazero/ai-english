@@ -15,8 +15,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String username;
-    @Column(name = "telegram_id")
-    private Long telegramId;
     @JsonIgnore
     private String role;
 }

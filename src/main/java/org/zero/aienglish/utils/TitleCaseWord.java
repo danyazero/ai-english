@@ -13,6 +13,8 @@ public class TitleCaseWord implements Function<Vocabulary, Vocabulary> {
     public Vocabulary apply(Vocabulary word) {
         log.info("Setting into tense word -> {}", word);
         if (!word.getWord().isEmpty()) word.setWord(getTitledSentence(word.getWord()));
+        if (!word.getSecondForm().isEmpty()) word.setSecondForm(getTitledSentence(word.getSecondForm()));
+        if (!word.getThirdForm().isEmpty()) word.setThirdForm(getTitledSentence(word.getThirdForm()));
         if (!word.getTranslate().isEmpty()) word.setTranslate(getTitledSentence(word.getTranslate()));
 
         return word;

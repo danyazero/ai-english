@@ -1,6 +1,8 @@
 package org.zero.aienglish.model;
 
 import lombok.Builder;
+import org.zero.aienglish.entity.Sentence;
+import org.zero.aienglish.entity.VocabularySentence;
 
 import java.util.List;
 
@@ -9,6 +11,7 @@ public record VocabularyWord(
         String word,
         String translation,
         Boolean alreadySaved,
-        List<VocabularySentence> sentences
+        String meaning,
+        List<Sentence> sentences
 ) {
 }

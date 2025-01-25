@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 @Entity
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "sentence")
@@ -24,4 +25,11 @@ public class Sentence {
 
     @Column(name = "translate", nullable = false, length = Integer.MAX_VALUE)
     private String translation;
+
+    @Column(name = "explanation", nullable = false, length = Integer.MAX_VALUE)
+    private String explanation;
+
+    @JoinColumn(name = "theme_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    private Theme theme;
 }

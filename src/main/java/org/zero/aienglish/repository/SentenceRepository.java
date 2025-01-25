@@ -12,22 +12,16 @@ public interface SentenceRepository extends JpaRepository<Sentence, Integer> {
     Optional<Sentence> findFirstBySentenceLikeIgnoreCase(String sentence);
 
     @Query(value = """
-        with SentenceHistory as (
-            select
-            	S.id,
-            	S.translate,
-            	S.sentence,
-            	SH.at,
-                row_number() over (partition by S.id order by SH.at desc) as rn
-               from sentence S
-               left join sentence_history SH on SH.user_id = 3 and SH.sentence_id = S.id)
-                       select id, translate, sentence
-                       from SentenceHistory
-                       where rn = 1
-                       order by at nulls first
-                       limit 1;
+            SELECT s.id, s.sentence, s.translate, t.id as themeId, t.title as theme
+            FROM sentence s
+            LEFT JOIN sentence_history sh ON s.id = sh.sentence_id and sh.user_id = ?1
+            JOIN theme t on t.id = s.theme_id
+            WHERE (?2 IS NULL OR s.theme_id = ?2)
+            GROUP BY s.id, s.sentence, t.id, title
+            ORDER BY MAX(sh.at) NULLS FIRST
+            LIMIT 1
             """, nativeQuery = true)
-    Optional<SentenceDTO> getSentenceForUser(Integer userId);
+    Optional<SentenceDTO> getSentenceForUser(Integer userId, Integer themeId);
 
     @Query(value = """
 select s.id, s.sentence, s.translate

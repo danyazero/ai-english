@@ -2,10 +2,12 @@ package org.zero.aienglish.utils;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.zero.aienglish.entity.SentenceHistory;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.model.*;
-import org.zero.aienglish.repository.SentenceHistoryRepository;
+import org.zero.aienglish.repository.*;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -14,12 +16,27 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class TaskManager {
-    private final Map<TaskType, TaskGenerator> taskMap;
+    private final VocabularySentenceRepository vocabularySentenceRepository;
     private final SentenceHistoryRepository sentenceHistoryRepository;
+    private final SentenceRepository sentenceRepository;
+    private final Map<TaskType, TaskGenerator> taskMap;
+    private final StatusRepository statusRepository;
+    private final UserRepository userRepository;
 
-    public TaskManager(List<TaskGenerator> taskList, SentenceHistoryRepository sentenceHistoryRepository) {
+    public TaskManager(
+            List<TaskGenerator> taskList,
+            VocabularySentenceRepository vocabularySentenceRepository,
+            SentenceHistoryRepository sentenceHistoryRepository,
+            SentenceRepository sentenceRepository,
+            StatusRepository statusRepository,
+            UserRepository userRepository
+    ) {
         taskMap = taskList.stream().collect(Collectors.toMap(TaskGenerator::getTaskName, Function.identity()));
+        this.vocabularySentenceRepository = vocabularySentenceRepository;
         this.sentenceHistoryRepository = sentenceHistoryRepository;
+        this.sentenceRepository = sentenceRepository;
+        this.statusRepository = statusRepository;
+        this.userRepository = userRepository;
     }
 
     public SentenceTask generateTask(TaskType taskType, SentenceDTO selectedSentence) {
@@ -27,28 +44,50 @@ public class TaskManager {
     }
 
     public SentenceTask generateTaskWithRandomGenerator(SentenceDTO selectedSentence) {
-        log.info("Task types size -> {}", taskMap.size());
         var selectedGeneratorIndex = Random.nextInRange(0, taskMap.size());
         var selectedGeneratorType = TaskType.values()[selectedGeneratorIndex];
-        log.info("Selected task type -> {}", selectedGeneratorType.name());
 
         return generateTask(selectedGeneratorType, selectedSentence);
     }
 
-    public CheckResult checkResult(Integer userId, String taskResultDTO) {
-        var logRow = sentenceHistoryRepository.findFirstByUser_IdAndStatus_IdOrderByAtDesc(userId, 1);
-        if (logRow.isEmpty()) {
-            log.warn("Sentence for check not found for user -> {}", userId);
-            throw new RequestException("Sentence for check not found");
+    public TaskCheckResult checkResult(Integer userId, TaskResultDTO taskResult) {
+        var currentSentence = sentenceRepository.findById(taskResult.taskId());
+        if (currentSentence.isEmpty()) {
+            log.warn("Current sentence is empty");
+            throw new RequestException("Current sentence not found");
         }
-        System.out.println();
-        log.info("Answered task type -> {}", logRow.get().getTaskType().name());
-        return taskMap
-                .get(logRow.get().getTaskType())
+
+        log.info("Current sentence id -> {}", currentSentence.get().getId());
+        var taskVocabulary = vocabularySentenceRepository.findAllBySentenceId(currentSentence.get().getId(), userId);
+
+        var fullSentence = sentenceRepository.findById(currentSentence.get().getId());
+
+        if (fullSentence.isEmpty()) {
+            log.warn("Full sentence is empty");
+            throw new RequestException("Full sentence not found");
+        }
+        log.info("Task result -> {}", taskResult);
+
+
+        var checkResult = taskMap
+                .get(taskResult.taskType())
                 .checkTask(
                         userId,
-                        taskResultDTO,
-                        logRow.get().getSentence()
+                        taskResult.answer(),
+                        fullSentence.get()
                 );
+
+        var userReference = userRepository.getReferenceById(userId);
+        var statusReference = statusRepository.getReferenceById(checkResult.accepted() ? 2 : 1);
+        var sentenceHistory = SentenceHistory.builder()
+                .respondTime(taskResult.respondTime())
+                .sentence(fullSentence.get())
+                .status(statusReference)
+                .user(userReference)
+                .at(Instant.now())
+                .build();
+        sentenceHistoryRepository.save(sentenceHistory);
+
+        return checkResult;
     }
 }

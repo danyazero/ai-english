@@ -13,10 +13,8 @@ import org.zero.aienglish.model.WordResponseDTO;
 @Mapper(builder = @Builder(disableBuilder = true))
 public interface WordMapper {
 
-    @Mapping(target = "speechPart", ignore = true)
     Vocabulary map(WordDTO wordDTO);
 
-    @Mapping(target = "speechPart", ignore = true)
     WordDTO map(Vocabulary word);
 
     @Mapping(target = "word", source = "defaultWord")
@@ -26,10 +24,8 @@ public interface WordMapper {
 
 
 
-    @Mapping(target = "speechPart", expression = "java(voc.getSpeechPart())")
     WordResponseDTO map(VocabularyDTO voc);
 
     @Mapping(target = "word", source = "sentence")
-    @Mapping(target = "speechPart", constant = "Unknown")
     WordResponseDTO map(SentenceDTO sentence);
 }

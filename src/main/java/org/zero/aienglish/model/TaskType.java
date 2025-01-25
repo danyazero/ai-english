@@ -1,8 +1,7 @@
 package org.zero.aienglish.model;
 
 public enum TaskType {
-    omittedWord,
-//    randomOrder,
-    tenseMarkers,
-//    wordMeaning
+//    OMITTED_WORD,
+//    TENSE_MARKERS,
+    GRAMMAR
 }

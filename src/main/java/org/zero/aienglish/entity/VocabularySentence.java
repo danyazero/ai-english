@@ -7,6 +7,7 @@ import lombok.*;
 @Setter
 @Entity
 @Builder
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "vocabulary_sentence")
@@ -20,8 +21,8 @@ public class VocabularySentence {
     @JoinColumn(name = "sentence_id", nullable = false)
     private Sentence sentence;
 
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "vocabulary_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vocabulary_id")
     private Vocabulary vocabulary;
 
     @Column(name = "\"order\"")
@@ -32,6 +33,9 @@ public class VocabularySentence {
 
     @Column(name = "is_marker")
     private Boolean isMarker = Boolean.FALSE;
+
+    @Column(name = "is_modal")
+    private Boolean isModal = Boolean.FALSE;
 
     public VocabularySentence(
             Sentence sentence,

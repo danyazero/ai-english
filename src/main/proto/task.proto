@@ -1,0 +1,58 @@
+syntax = "proto3";
+package org.zero.aienglish.lib;
+option java_package = "org.zero.aienglish.lib.grpc";
+
+message TaskRequest {
+  int32 user_id = 1;
+  int32 theme_id = 2;
+}
+
+message TaskResponse {
+  int32 sentence_id = 1;
+  string task_type = 2;
+  string title = 3;
+  string caption = 4;
+  string pattern = 5;
+  string theme = 6;
+  int32 steps = 7;
+  repeated Word answers = 8;
+}
+
+message Word {
+  string word = 1;
+  string translate = 2;
+  int32 order = 3;
+}
+
+message TaskCheckRequest {
+  int32 user_id = 1;
+  TaskResult answer = 2;
+}
+
+message TaskCheckResponse {
+  bool accepted = 1;
+  string correct_answer = 2;
+  string user_answer = 3;
+  float mark = 4;
+}
+
+message TaskResult {
+  string task_type = 1;
+  int32 task_id = 2;
+  int32 respond_time = 3;
+  string answer = 4;
+}
+
+message TaskHelpRequest {
+  int32 task_id = 1;
+}
+
+message TaskHelpResponse {
+  string text = 1;
+}
+
+service TaskService {
+  rpc getTask(TaskRequest) returns (TaskResponse) {};
+  rpc checkTask(TaskCheckRequest) returns (TaskCheckResponse) {};
+  rpc getTaskExplain(TaskHelpRequest) returns (TaskHelpResponse) {};
+}
