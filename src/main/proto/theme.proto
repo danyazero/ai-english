@@ -23,9 +23,18 @@ message ThemesRequest {
   int32 page = 2;
 }
 
+message SelectThemeRequest {
+  int32 user_id = 1;
+  int32 theme_id = 2;
+}
 
+message ClearThemeRequest {
+  int32 user_id = 1;
+}
 
 service ThemeService {
   rpc getCategories(google.protobuf.Empty) returns (CategoriesResponse) {};
   rpc getThemes(ThemesRequest) returns (ThemesResponse) {};
+  rpc selectTheme(SelectThemeRequest) returns (google.protobuf.Empty) {};
+  rpc clearThemes(ClearThemeRequest) returns (google.protobuf.Empty) {};
 }

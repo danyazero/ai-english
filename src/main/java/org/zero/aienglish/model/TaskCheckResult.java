@@ -4,9 +4,9 @@ import lombok.Builder;
 
 @Builder
 public record TaskCheckResult(
-        boolean accepted,
-        String correctAnswer,
-        String userAnswer,
-        Float mark
+        Integer taskId,
+        boolean checked,
+        CheckResultDTO result,
+        TaskState state
 ) {
 }

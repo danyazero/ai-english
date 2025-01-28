@@ -1,7 +1,7 @@
 package org.zero.aienglish.utils;
 
 import org.springframework.stereotype.Component;
-import org.zero.aienglish.model.WordResponseDTO;
+import org.zero.aienglish.model.TaskAnswer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,11 +9,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class DistinctWords implements Function<List<WordResponseDTO>, List<WordResponseDTO>> {
+public class DistinctWords implements Function<List<TaskAnswer>, List<TaskAnswer>> {
     @Override
-    public List<WordResponseDTO> apply(List<WordResponseDTO> wordResponseDTOS) {
+    public List<TaskAnswer> apply(List<TaskAnswer> wordResponseDTOS) {
         return new ArrayList<>(wordResponseDTOS.stream().collect(Collectors.toMap(
-                        WordResponseDTO::getWord,
+                        TaskAnswer::word,
                         obj -> obj,
                         (existing, replacement) -> existing))
                 .values());

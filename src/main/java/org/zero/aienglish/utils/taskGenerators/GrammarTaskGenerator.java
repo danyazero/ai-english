@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.zero.aienglish.entity.Sentence;
 import org.zero.aienglish.entity.VocabularySentence;
-import org.zero.aienglish.lib.grpc.Task;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.SentenceHistoryRepository;
 import org.zero.aienglish.repository.StatusRepository;
@@ -27,7 +26,7 @@ public class GrammarTaskGenerator extends TaskGenerator {
     private final SentenceHistoryRepository sentenceHistoryRepository;
     private final ContinuousFormConverter ContinuousFormConverter;
     private final SimpleFormConverter simpleFormConverter;
-    private final SentenceWordOmit sentenceWordOmit;
+    private final FormatSentence sentenceWordOmit;
     private final StatusRepository statusRepository;
     private final DistinctWords distinctWords;
     private final AccuracyCheck accuracyCheck;
@@ -40,14 +39,14 @@ public class GrammarTaskGenerator extends TaskGenerator {
     @Override
     public SentenceTask generateTask(SentenceDTO selectedSentence) {
         var correctAnswers = getCorrectAnswers(selectedSentence);
-        var formattedSentence = sentenceWordOmit.apply(selectedSentence.getSentence(), correctAnswers);
+        var formattedSentence = sentenceWordOmit.apply(selectedSentence.getSentence(), ImprovedList.of(correctAnswers));
 
         var randomAnswers = vocabularySentenceRepository.findRandomGrammarWords(selectedSentence.getId(), 3);
         var randomAnswersSentences = getRandomAnswersSentences(randomAnswers);
 
         log.info("Random sentences -> {}", randomAnswersSentences);
 
-        var formattedAnswers = new ArrayList<WordResponseDTO>();
+        var formattedAnswers = new ArrayList<TaskAnswer>();
         for (Integer sentence : randomAnswersSentences) {
 
             var words = randomAnswers.stream()
@@ -97,16 +96,16 @@ public class GrammarTaskGenerator extends TaskGenerator {
         return SentenceTask.builder()
                 .caption(selectedSentence.getTranslate())
                 .sentenceId(selectedSentence.getId())
-                .theme(selectedSentence.getTheme())
-                .steps(correctAnswers.size())
+                .stepAmount(correctAnswers.size())
                 .taskType(TaskType.GRAMMAR)
                 .pattern(formattedSentence)
                 .answers(distinctAnswers)
                 .title(formattedSentence)
+                .currentStep(0)
                 .build();
     }
 
-    private void addSimpleFormAnswer(AnswerDTO answerDTO, ArrayList<WordResponseDTO> formattedAnswers) {
+    private void addSimpleFormAnswer(AnswerDTO answerDTO, ArrayList<TaskAnswer> formattedAnswers) {
         if (isCouldBeUsedSimpleForm(answerDTO.word(), answerDTO.isNegative())) {
             Function<GrammarDTO, String> extractor = word -> simpleFormConverter.apply(word.getFirstForm());
             var currentAnswerSimpleForm = getGeneratedAnswer(answerDTO, extractor);
@@ -114,20 +113,20 @@ public class GrammarTaskGenerator extends TaskGenerator {
         }
     }
 
-    private static void addThirdFormAnswer(AnswerDTO answerDTO, ArrayList<WordResponseDTO> formattedAnswers) {
+    private static void addThirdFormAnswer(AnswerDTO answerDTO, ArrayList<TaskAnswer> formattedAnswers) {
         if (!answerDTO.isNegative()) {
             var currentAnswerThirdForm = getGeneratedAnswer(answerDTO, GrammarDTO::getThirdForm);
             formattedAnswers.add(currentAnswerThirdForm);
         }
     }
 
-    private static void addDefaultAnswer(AnswerDTO answerDTO, List<WordResponseDTO> formattedAnswers) {
+    private static void addDefaultAnswer(AnswerDTO answerDTO, List<TaskAnswer> formattedAnswers) {
         var answer = getFormattedGeneratedAnswer(answerDTO, GrammarDTO::getDefaultWord);
 
         formattedAnswers.add(answer);
     }
 
-    private void addContinuousAnswer(AnswerDTO answerDTO, List<WordResponseDTO> formattedAnswers) {
+    private void addContinuousAnswer(AnswerDTO answerDTO, List<TaskAnswer> formattedAnswers) {
         if (!answerDTO.isNegative() && !answerDTO.word().getIsModal()) {
             Function<GrammarDTO, String> extractor = word -> ContinuousFormConverter.apply(word.getFirstForm());
             var currentAnswerContForm = getGeneratedAnswer(answerDTO, extractor);
@@ -136,7 +135,7 @@ public class GrammarTaskGenerator extends TaskGenerator {
         }
     }
 
-    private static WordResponseDTO getFormattedGeneratedAnswer(AnswerDTO answerDTO, Function<GrammarDTO, String> extractor) {
+    private static TaskAnswer getFormattedGeneratedAnswer(AnswerDTO answerDTO, Function<GrammarDTO, String> extractor) {
         var currentFormattedWord = getFormattedWord(
                 extractor.apply(answerDTO.word()),
                 answerDTO.isNegative()
@@ -145,23 +144,21 @@ public class GrammarTaskGenerator extends TaskGenerator {
         return getGeneratedAnswer(answerDTO, currentFormattedWord);
     }
 
-    private static WordResponseDTO getGeneratedAnswer(AnswerDTO answerDTO, Function<GrammarDTO, String> extractor) {
+    private static TaskAnswer getGeneratedAnswer(AnswerDTO answerDTO, Function<GrammarDTO, String> extractor) {
         return getGeneratedAnswer(answerDTO, extractor.apply(answerDTO.word()));
     }
 
-    private static WordResponseDTO getGeneratedAnswer(AnswerDTO answerDTO, String currentFormattedWord) {
-        return WordResponseDTO.builder()
+    private static TaskAnswer getGeneratedAnswer(AnswerDTO answerDTO, String currentFormattedWord) {
+        return TaskAnswer.builder()
                 .word(currentFormattedWord)
-                .id(answerDTO.sentenceId())
                 .order(answerDTO.order())
-                .translate("__")
                 .build();
     }
 
-    private List<WordResponseDTO> deduplicateAnswers(List<WordResponseDTO> formattedAnswers, List<TaskWord> correctAnswerWords) {
+    private List<TaskAnswer> deduplicateAnswers(List<TaskAnswer> formattedAnswers, List<TaskWord> correctAnswerWords) {
         return IntStream.range(0, correctAnswerWords.size())
                 .mapToObj(order -> distinctWords.apply(formattedAnswers.stream()
-                        .filter(answer -> answer.getOrder() == order)
+                        .filter(answer -> answer.order() == order)
                         .toList()))
                 .flatMap(List::stream)
                 .toList();
@@ -223,13 +220,24 @@ public class GrammarTaskGenerator extends TaskGenerator {
 
     @Override
     public TaskCheckResult checkTask(Integer userId, String result, Sentence sentence) {
+
         result = result.replaceAll(" \\((\\w+)\\)", "");
         var correctAnswer = sentence.getSentence().replaceAll("[*]", "");
         log.info("Formatted user answer -> {}, formatted correct answer -> {}", result, correctAnswer);
         var checkResult = accuracyCheck.apply(correctAnswer, result);
-        this.saveTaskLog(checkResult > 98F, userId, statusRepository, sentenceHistoryRepository);
+        this.saveTaskLog(checkResult > 99F, userId, statusRepository, sentenceHistoryRepository);
+
+        var checkResultDTO = getCheckResult(result, correctAnswer, checkResult);
 
         return TaskCheckResult.builder()
+                .taskId(sentence.getId())
+                .result(checkResultDTO)
+                .checked(true)
+                .build();
+    }
+
+    private static CheckResultDTO getCheckResult(String result, String correctAnswer, Float checkResult) {
+        return CheckResultDTO.builder()
                 .correctAnswer(correctAnswer)
                 .accepted(checkResult > 99F)
                 .userAnswer(result)

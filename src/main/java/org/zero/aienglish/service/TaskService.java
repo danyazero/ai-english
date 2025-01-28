@@ -4,26 +4,34 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.zero.aienglish.entity.RecommendationState;
+import org.zero.aienglish.entity.Task;
 import org.zero.aienglish.exception.RequestException;
+import org.zero.aienglish.mapper.AnswerMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.*;
+import org.zero.aienglish.utils.MarkCurrentKey;
+import org.zero.aienglish.utils.MergeOmitPairs;
 import org.zero.aienglish.utils.TaskManager;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TaskService {
     private final TaskManager taskManager;
-    private final ThemeRepository themeRepository;
+    private final ThemeService themeService;
+    private final TaskRepository taskRepository;
+    private final MergeOmitPairs mergeOmitPairs;
+    private final MarkCurrentKey markCurrentKey;
     private final SentenceRepository sentenceRepository;
     private final RecommendationRepository recommendationRepository;
 
-    public SentenceTask getTask(Integer userId, Integer taskTheme) {
-        if (taskTheme == null) {
-            taskTheme = getCurrentThemeForUser(userId);
-        }
+    private SentenceTask getTask(Integer userId) {
+        var taskTheme = themeService.getCurrentThemeForUser(userId);
+        log.info("Current theme is {}", taskTheme);
         var selectedSentence = sentenceRepository.getSentenceForUser(userId, taskTheme);
         if (selectedSentence.isEmpty()) {
             log.warn("Sentence for task not found for user -> {}", userId);
@@ -33,7 +41,64 @@ public class TaskService {
 
         log.info("Selected words is suitable. Selecting generator randomly.");
 
-        return taskManager.generateTask(TaskType.GRAMMAR, selectedSentence.get());
+        var generatedTask = taskManager.generateTask(TaskType.GRAMMAR, selectedSentence.get());
+
+
+        var taskState = Task.builder()
+                .taskType(generatedTask.taskType().name())
+                .task(List.of(generatedTask.pattern()))
+                .taskId(generatedTask.sentenceId())
+                .amountSteps(generatedTask.stepAmount())
+                .answers(generatedTask.answers())
+                .timeToLive(360)
+                .currentStep(0)
+                .id(userId)
+                .build();
+        taskRepository.save(taskState);
+
+
+        return generatedTask;
+    }
+
+    public TaskState revert(Integer userId) {
+        var taskState = taskRepository.findById(userId);
+
+        if (taskState.isEmpty()) {
+            log.info("Task state not found for user -> {}", userId);
+            throw new RequestException("Task state not found.");
+        }
+        var updatedCurrentStep = revertState(taskState.get());
+
+        var answers = taskState.get().getAnswers().stream()
+                .filter(element -> Objects.equals(element.order(), updatedCurrentStep))
+                .toList();
+
+        return TaskState.builder()
+                .amountSteps(taskState.get().getAmountSteps())
+                .currentStep(updatedCurrentStep)
+                .title(taskState.get().getTask().getLast())
+                .answers(answers)
+                .build();
+    }
+
+    private Integer revertState(Task taskState) {
+        var taskList = taskState.getTask();
+        taskList.removeLast();
+
+        taskState.setTask(taskList);
+        int updatedCurrentStep = taskState.getCurrentStep() - 1;
+        taskState.setCurrentStep(updatedCurrentStep);
+        taskRepository.save(taskState);
+
+
+        return updatedCurrentStep;
+    }
+
+
+    private String getFormattedTaskSentence(String sentence) {
+        return markCurrentKey.apply(
+                mergeOmitPairs.apply(sentence)
+        );
     }
 
     public String getTaskTheoryHelp(Integer taskId) {
@@ -54,76 +119,108 @@ public class TaskService {
         );
     }
 
-    private Integer getCurrentThemeForUser(Integer userId) {
-        var foundedState = recommendationRepository.findById(userId);
-        if (foundedState.isPresent()) {
-        log.info("For user with id -> {}, current theme is -> {}, with current step -> {}", foundedState.get().getId(), foundedState.get().getCurrenThemeId(), foundedState.get().getStep());
-            if (foundedState.get().getStep() >= 3) {
-                var themeRating = foundedState.get().getTodayThemes();
-                var nextTheme = getNextTheme(themeRating, foundedState.get());
 
-                foundedState.get().setCurrenThemeId(nextTheme);
-                foundedState.get().setStep(0);
-                recommendationRepository.save(foundedState.get());
+    public TaskCheckResult checkTask(Integer userId, String answer) {
+        var taskState = taskRepository.findById(userId);
 
-                return nextTheme;
-            }
-
-            return foundedState.get().getCurrenThemeId();
+        if (taskState.isEmpty() || answer.isBlank()) {
+            log.info("Task not found for user -> {}", userId);
+            return generateTaskForUser(userId);
         }
 
-        var todayRecommendedThemes = getTodayThemes(userId);
-        log.info("Recommendation state first recommended for user -> {}", todayRecommendedThemes);
-        var recommendationState = RecommendationState.builder()
-                .currenThemeId(todayRecommendedThemes.getFirst())
-                .todayThemes(todayRecommendedThemes)
-                .timeToLive(72000)
-                .id(userId)
-                .step(0)
-                .build();
-        recommendationRepository.save(recommendationState);
+        updateTaskHistory(answer, taskState.get());
+        var nextStep = increaseCurrentStep(taskState.get());
 
-        return todayRecommendedThemes.getFirst();
+        if (isLastStep(nextStep, taskState.get())) {
+            var taskAnswer = AnswerMapper.map(taskState.get());
+
+            taskRepository.delete(taskState.get());
+            updateRecommendationState(userId);
+
+            return taskManager.checkResult(userId, taskAnswer);
+        }
+
+        return getTaskState(taskState.get(), nextStep);
     }
 
-    private List<Integer> getTodayThemes(Integer userId) {
-        var recommendation = themeRepository.findUserThemeRating(userId, 5);
-        if (recommendation.size() >= 5) {
-            log.info("Recommendation for user -> {} prepaired on previous answers history", userId);
-            var notAnsweredThemes = themeRepository.findThemeNoAnswered(userId, 1);
-            recommendation.addAll(notAnsweredThemes);
-        }
+    private TaskCheckResult getTaskState(Task taskState, int nextStep) {
+        var lastTaskState = taskState.getTask().getLast();
+        var formattedTaskSentence = getFormattedTaskSentence(lastTaskState);
 
-        var notAnsweredThemes = themeRepository.findThemeNoAnswered(userId, Math.max(0, 5 - recommendation.size()));
-        recommendation.addAll(notAnsweredThemes);
+        var answers = getAnswersForStep(
+                taskState.getAnswers(),
+                nextStep
+        );
 
-        return recommendation.stream()
-                .map(ThemeScoreDTO::getId)
+        var taskStateResponse = TaskState.builder()
+                .title(formattedTaskSentence)
+                .amountSteps(taskState.getAmountSteps())
+                .currentStep(nextStep)
+                .answers(answers)
+                .build();
+
+        taskRepository.save(taskState);
+
+
+        return TaskCheckResult.builder()
+                .taskId(taskState.getTaskId())
+                .state(taskStateResponse)
+                .checked(false)
+                .build();
+    }
+
+    private TaskCheckResult generateTaskForUser(Integer userId) {
+        var generatedTask = getTask(userId);
+
+        var formattedTaskTitle = getFormattedTaskSentence(generatedTask.title());
+
+        var answers = getAnswersForStep(generatedTask.answers(), 0);
+
+        var state = TaskState.builder()
+                .title(formattedTaskTitle)
+                .currentStep(generatedTask.currentStep())
+                .amountSteps(generatedTask.stepAmount())
+                .answers(answers)
+                .build();
+
+        return TaskCheckResult.builder()
+                .checked(false)
+                .taskId(generatedTask.sentenceId())
+                .state(state)
+                .build();
+    }
+
+    private static List<TaskAnswer> getAnswersForStep(List<TaskAnswer> taskState, int nextStep) {
+        return taskState.stream()
+                .filter(task -> task.order() == nextStep)
                 .toList();
     }
 
-    private static Integer getNextTheme(List<Integer> themeRating, RecommendationState foundedState) {
-        var isCurrentTheme = false;
-        for (int i = 0; i < themeRating.size(); i++) {
-            if (isCurrentTheme) {
-                return themeRating.get(i);
-            }
-            if (themeRating.get(i).equals(foundedState.getCurrenThemeId())) {
-                isCurrentTheme = true;
-            }
-        }
+    private static int increaseCurrentStep(Task taskState) {
+        var nextStep = taskState.getCurrentStep() + 1;
+        taskState.setCurrentStep(nextStep);
 
-        return themeRating.getFirst();
+        return nextStep;
     }
 
-
-    public TaskCheckResult checkTask(Integer userId, TaskResultDTO taskResult) {
+    private void updateRecommendationState(Integer userId) {
         var foundedState = recommendationRepository.findById(userId);
         if (foundedState.isPresent()) {
             log.info("Recommendation state founded for user -> {}", userId);
             foundedState.get().setStep(foundedState.get().getStep() + 1);
             recommendationRepository.save(foundedState.get());
         }
-        return taskManager.checkResult(userId, taskResult);
+    }
+
+    private static boolean isLastStep(int nextStep, Task taskState) {
+        return nextStep >= taskState.getAmountSteps();
+    }
+
+    private static void updateTaskHistory(String answer, Task taskState) {
+        var taskHistory = taskState.getTask();
+        var task = taskHistory.getLast().replaceFirst("__", answer);
+        taskHistory.add(task);
+
+        taskState.setTask(taskHistory);
     }
 }

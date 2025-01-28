@@ -9,6 +9,6 @@ public record TaskDTO(
         Integer id,
         String translate,
         String sentence,
-        List<WordResponseDTO> words
+        List<TaskAnswer> words
 ) {
 }

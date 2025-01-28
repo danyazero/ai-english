@@ -10,14 +10,12 @@ import org.zero.aienglish.entity.Theme;
 import org.zero.aienglish.entity.VocabularySentence;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.mapper.SentenceMapper;
-import org.zero.aienglish.mapper.WordMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.*;
 import org.zero.aienglish.utils.TitleCaseWord;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

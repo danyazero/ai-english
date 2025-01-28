@@ -51,6 +51,7 @@ public class TaskManager {
     }
 
     public TaskCheckResult checkResult(Integer userId, TaskResultDTO taskResult) {
+        log.info("Extracting sentence with id -> {}", taskResult.taskId());
         var currentSentence = sentenceRepository.findById(taskResult.taskId());
         if (currentSentence.isEmpty()) {
             log.warn("Current sentence is empty");
@@ -58,7 +59,6 @@ public class TaskManager {
         }
 
         log.info("Current sentence id -> {}", currentSentence.get().getId());
-        var taskVocabulary = vocabularySentenceRepository.findAllBySentenceId(currentSentence.get().getId(), userId);
 
         var fullSentence = sentenceRepository.findById(currentSentence.get().getId());
 
@@ -78,9 +78,9 @@ public class TaskManager {
                 );
 
         var userReference = userRepository.getReferenceById(userId);
-        var statusReference = statusRepository.getReferenceById(checkResult.accepted() ? 2 : 1);
+        var statusReference = statusRepository.getReferenceById(checkResult.result().accepted() ? 2 : 1);
         var sentenceHistory = SentenceHistory.builder()
-                .respondTime(taskResult.respondTime())
+                .respondTime(50)
                 .sentence(fullSentence.get())
                 .status(statusReference)
                 .user(userReference)

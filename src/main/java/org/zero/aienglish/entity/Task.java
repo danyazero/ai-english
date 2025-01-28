@@ -3,24 +3,25 @@ package org.zero.aienglish.entity;
 import lombok.*;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
+import org.zero.aienglish.model.TaskAnswer;
 
 import java.io.Serializable;
 import java.util.List;
 
-
-@Getter
 @Setter
+@Getter
 @Builder
-@RedisHash("recommendation_state")
-@NoArgsConstructor
+@RedisHash
 @AllArgsConstructor
-public class RecommendationState implements Serializable {
+@NoArgsConstructor
+public class Task implements Serializable {
     private Integer id;
-    private Integer step;
-    private Integer currenThemeId;
-    private Integer currentThemeIndex;
-    private List<Integer> selectedThemes;
-    private List<Integer> todayThemes;
+    private List<String> task;
+    private Integer taskId;
+    private String taskType;
+    private Integer amountSteps;
+    private Integer currentStep;
+    private List<TaskAnswer> answers;
     @TimeToLive
     private Integer timeToLive;
 }

@@ -17,6 +17,27 @@ public class ThemeController extends ThemeServiceGrpc.ThemeServiceImplBase {
     private final ThemeService themeService;
 
     @Override
+    public void selectTheme(ThemeOuterClass.SelectThemeRequest request, StreamObserver<Empty> responseObserver) {
+        var userId = request.getUserId();
+        var themeId = request.getThemeId();
+
+        themeService.selectTheme(userId, themeId);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void clearThemes(ThemeOuterClass.ClearThemeRequest request, StreamObserver<Empty> responseObserver) {
+        var userId = request.getUserId();
+
+        themeService.clearTheme(userId);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void getCategories(Empty request, StreamObserver<ThemeOuterClass.CategoriesResponse> responseObserver) {
         var themeCategories = themeService.getThemeCategories();
 
