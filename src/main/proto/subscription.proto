@@ -1,0 +1,43 @@
+syntax = "proto3";
+package org.zero.aienglish.lib;
+option java_package = "org.zero.aienglish.lib.grpc";
+
+message UserSubscriptionPlanRequest {
+  int32 user_id = 1;
+}
+
+message UserSubscriptionPlanResponse {
+  UserSubscriptionPlan userSubscription = 1;
+  repeated SubscriptionPlan available_plans = 2;
+}
+
+message UserSubscriptionPlan {
+  string name = 1;
+  string start_date = 2;
+  string end_date = 3;
+  int32 remain_days = 4;
+  double price = 5;
+}
+
+message SubscriptionPlan {
+  int32 id = 1;
+  string name = 2;
+  int32 duration_days = 3;
+  double price = 4;
+}
+
+message SubscriptionCheckoutRequest {
+  int32 user_id = 1;
+  int32 plan_id = 2;
+}
+
+message SubscriptionCheckoutResponse {
+  SubscriptionPlan plan_details = 1;
+  string checkout_link = 2;
+}
+
+
+service SubscriptionService {
+  rpc userSubscription(UserSubscriptionPlanRequest) returns (UserSubscriptionPlanResponse) {};
+  rpc planCheckout(SubscriptionCheckoutRequest) returns (SubscriptionCheckoutResponse) {};
+}

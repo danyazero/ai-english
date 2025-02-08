@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 public class TaskManager {
-    private final VocabularySentenceRepository vocabularySentenceRepository;
     private final SentenceHistoryRepository sentenceHistoryRepository;
     private final SentenceRepository sentenceRepository;
     private final Map<TaskType, TaskGenerator> taskMap;
@@ -25,14 +24,12 @@ public class TaskManager {
 
     public TaskManager(
             List<TaskGenerator> taskList,
-            VocabularySentenceRepository vocabularySentenceRepository,
             SentenceHistoryRepository sentenceHistoryRepository,
             SentenceRepository sentenceRepository,
             StatusRepository statusRepository,
             UserRepository userRepository
     ) {
         taskMap = taskList.stream().collect(Collectors.toMap(TaskGenerator::getTaskName, Function.identity()));
-        this.vocabularySentenceRepository = vocabularySentenceRepository;
         this.sentenceHistoryRepository = sentenceHistoryRepository;
         this.sentenceRepository = sentenceRepository;
         this.statusRepository = statusRepository;
@@ -50,7 +47,7 @@ public class TaskManager {
         return generateTask(selectedGeneratorType, selectedSentence);
     }
 
-    public TaskCheckResult checkResult(Integer userId, TaskResultDTO taskResult) {
+    public CheckResultDTO checkResult(Integer userId, TaskResultDTO taskResult) {
         log.info("Extracting sentence with id -> {}", taskResult.taskId());
         var currentSentence = sentenceRepository.findById(taskResult.taskId());
         if (currentSentence.isEmpty()) {
@@ -78,9 +75,9 @@ public class TaskManager {
                 );
 
         var userReference = userRepository.getReferenceById(userId);
-        var statusReference = statusRepository.getReferenceById(checkResult.result().accepted() ? 2 : 1);
+        var statusReference = statusRepository.getReferenceById(checkResult.accepted() ? 2 : 1);
         var sentenceHistory = SentenceHistory.builder()
-                .respondTime(50)
+                .respondTime(taskResult.respondTime())
                 .sentence(fullSentence.get())
                 .status(statusReference)
                 .user(userReference)

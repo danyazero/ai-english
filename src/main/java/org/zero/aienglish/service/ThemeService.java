@@ -2,6 +2,7 @@ package org.zero.aienglish.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.zero.aienglish.entity.RecommendationState;
@@ -9,6 +10,8 @@ import org.zero.aienglish.entity.Theme;
 import org.zero.aienglish.entity.ThemeCategory;
 import org.zero.aienglish.entity.ThemeTheme;
 import org.zero.aienglish.exception.RequestException;
+import org.zero.aienglish.exception.TaskNotFoundException;
+import org.zero.aienglish.mapper.ThemeMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.RecommendationRepository;
 import org.zero.aienglish.repository.ThemeCategoryRepository;
@@ -24,29 +27,65 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class ThemeService {
+    @Value("${app.pageSize}")
+    private Integer pageSize;
     private final ThemeRepository themeRepository;
     private final ThemeRelyRepository themeRelyRepository;
     private final RecommendationRepository recommendationRepository;
     private final ThemeCategoryRepository themeCategoryRepository;
 
-    public List<ThemeDTO> getThemeCategories() {
-        return themeCategoryRepository.findAll().stream()
+    public Themes getThemeCategories(Integer userId) {
+        var categories = themeCategoryRepository.findAll().stream()
                 .map(mapThemeCategoryToThemeDTO())
                 .toList();
+        var page = Pagination.<ThemeDTO>builder()
+                .items(categories)
+                .currentPage(0)
+                .totalPages(1)
+                .build();
+
+        var savedThemes = recommendationRepository.findById(userId);
+        if (savedThemes.isEmpty() || savedThemes.get().getSelectedThemes() == null) {
+            log.warn("Saved Themes for user with id -> {}, not found", userId);
+            return Themes.builder()
+                    .recommendations(page)
+                    .build();
+        }
+
+        return Themes.builder()
+                .recommendations(page)
+                .saved(savedThemes.get().getSelectedThemes())
+                .build();
     }
 
-    public void selectTheme(Integer userId, Integer themeId) {
+    public Themes selectTheme(Integer userId, Integer themeId) {
         var foundedState = recommendationRepository.findById(userId);
         if (foundedState.isEmpty()) {
             foundedState = Optional.of(initTodayRecommendationState(userId));
         }
 
+        var foundedTheme = themeRepository.findById(themeId);
+        if (foundedTheme.isEmpty()) {
+            log.warn("Selected theme not found");
+            throw new RequestException("Theme with provided id not found.");
+        }
+        var selectedTheme = ThemeMapper.map(foundedTheme.get());
         if (foundedState.get().getSelectedThemes() == null) {
-            foundedState.get().setSelectedThemes(List.of(themeId));
+            foundedState.get().setSelectedThemes(List.of(selectedTheme));
         } else {
-            foundedState.get().getSelectedThemes().add(themeId);
+            foundedState.get().getSelectedThemes().add(selectedTheme);
         }
         recommendationRepository.save(foundedState.get());
+
+        var pageInfo = themeRepository.countThemesBefore(themeId, foundedTheme.get().getCategory().getId());
+        var calculatedPage = (int) Math.ceil(pageInfo / pageSize);
+
+        var page = getThemeForCategory(userId, foundedTheme.get().getCategory().getId(), calculatedPage);
+
+        return Themes.builder()
+                .recommendations(page)
+                .saved(foundedState.get().getSelectedThemes())
+                .build();
     }
 
     public void clearTheme(Integer userId) {
@@ -61,6 +100,11 @@ public class ThemeService {
         var foundedState = recommendationRepository.findById(userId);
         if (foundedState.isPresent()) {
             if (foundedState.get().getSelectedThemes() != null) {
+                if (foundedState.get().getStep() >= 3) {
+                    foundedState.get().setStep(0);
+                    foundedState.get().setCurrentThemeIndex(foundedState.get().getCurrentThemeIndex() + 1);
+                    recommendationRepository.save(foundedState.get());
+                }
                 return getNextSelectedTheme(foundedState.get());
             }
             if (foundedState.get().getStep() >= 3) {
@@ -94,15 +138,16 @@ public class ThemeService {
         return recommendationRepository.save(recommendationState);
     }
 
-    private static Integer getNextSelectedTheme(RecommendationState foundedState) {
+    private Integer getNextSelectedTheme(RecommendationState foundedState) {
         foundedState.setCurrentThemeIndex(foundedState.getCurrentThemeIndex() + 1);
 
         if (foundedState.getCurrentThemeIndex() >= foundedState.getSelectedThemes().size()) {
             foundedState.setCurrentThemeIndex(0);
         }
         var currentIndex = foundedState.getCurrentThemeIndex();
+        recommendationRepository.save(foundedState);
 
-        return foundedState.getSelectedThemes().get(currentIndex);
+        return foundedState.getSelectedThemes().get(currentIndex).id();
     }
 
     private static int getNextRecommendedTheme(RecommendationState foundedState) {
@@ -131,6 +176,11 @@ public class ThemeService {
         var notAnsweredThemes = themeRepository.findThemeNoAnswered(userId, Math.max(0, 5 - recommendation.size()));
         recommendation.addAll(notAnsweredThemes);
 
+        if (recommendation.isEmpty()) {
+            log.warn("No tasks have been found");
+            throw new TaskNotFoundException("Жодного завдання не було знайдено.");
+        }
+
         return recommendation.stream()
                 .map(ThemeScoreDTO::getId)
                 .toList();
@@ -146,7 +196,7 @@ public class ThemeService {
             var firstTheme = findThemeByTitle(savedThemes, rely.theme());
             if (firstTheme.isEmpty()) continue;
 
-            var secondTheme = findThemeByTitle(savedThemes, rely.theme());
+            var secondTheme = findThemeByTitle(savedThemes, rely.to());
             if (secondTheme.isEmpty()) continue;
 
             var themeRely = ThemeTheme.builder()
@@ -189,13 +239,17 @@ public class ThemeService {
         return themeRepository.save(newTheme);
     }
 
-    public Pagination<ThemeDTO> getThemeForCategory(Integer categoryId, Integer page) {
-        var pageParams = PageRequest.of(page, 2);
-        var themePage = themeRepository.findAllByCategory_Id(categoryId, pageParams);
+    public Pagination<ThemeDTO> getThemeForCategory(Integer userId, Integer categoryId, Integer page) {
+        var pageParams = PageRequest.of(page, pageSize);
+        var themePage = themeRepository.findAllByCategory_IdOrderById(categoryId, pageParams);
+
+
+        var selectedThemes = getSelectedThemes(userId);
 
         var foundedThemes = themePage.stream()
-                .map(mapThemeToThemeDTO())
+                .map(mapThemeToThemeDTO(selectedThemes))
                 .toList();
+
 
         return Pagination.<ThemeDTO>builder()
                 .totalPages(themePage.getTotalPages())
@@ -204,11 +258,25 @@ public class ThemeService {
                 .build();
     }
 
-    private static Function<Theme, ThemeDTO> mapThemeToThemeDTO() {
+    private static Function<Theme, ThemeDTO> mapThemeToThemeDTO(List<Integer> selectedThemes) {
         return element -> ThemeDTO.builder()
-                .id(element.getId())
+                .isSelected(selectedThemes != null && selectedThemes.contains(element.getId()))
                 .title(element.getTitle())
+                .id(element.getId())
                 .build();
+    }
+
+    private List<Integer> getSelectedThemes(Integer userId) {
+        var founded = recommendationRepository.findById(userId);
+
+        if (founded.isPresent() && founded.get().getSelectedThemes() != null) {
+            return founded.get().getSelectedThemes().stream()
+                    .map(ThemeDTO::id)
+                    .toList();
+        }
+
+        return List.of();
+
     }
 
     private static Function<ThemeCategory, ThemeDTO> mapThemeCategoryToThemeDTO() {

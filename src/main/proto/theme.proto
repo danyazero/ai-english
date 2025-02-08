@@ -6,10 +6,12 @@ option java_package = "org.zero.aienglish.lib.grpc";
 message Theme {
   int32 id = 1;
   string title = 2;
+  bool is_selected = 3;
 }
 
 message CategoriesResponse {
-  repeated Theme themes = 1;
+  ThemesResponse themes = 1;
+  repeated Theme saved = 2;
 }
 
 message ThemesResponse {
@@ -21,6 +23,7 @@ message ThemesResponse {
 message ThemesRequest {
   int32 category_id = 1;
   int32 page = 2;
+  int32 user_id = 3;
 }
 
 message SelectThemeRequest {
@@ -28,13 +31,22 @@ message SelectThemeRequest {
   int32 theme_id = 2;
 }
 
+message SelectThemeResponse {
+  ThemesResponse themes = 1;
+  repeated Theme saved = 2;
+}
+
 message ClearThemeRequest {
   int32 user_id = 1;
 }
 
+message CategoriesRequest {
+  int32 user_id = 1;
+}
+
 service ThemeService {
-  rpc getCategories(google.protobuf.Empty) returns (CategoriesResponse) {};
+  rpc getCategories(CategoriesRequest) returns (CategoriesResponse) {};
   rpc getThemes(ThemesRequest) returns (ThemesResponse) {};
-  rpc selectTheme(SelectThemeRequest) returns (google.protobuf.Empty) {};
+  rpc selectTheme(SelectThemeRequest) returns (SelectThemeResponse) {};
   rpc clearThemes(ClearThemeRequest) returns (google.protobuf.Empty) {};
 }

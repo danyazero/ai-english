@@ -28,9 +28,10 @@ message TaskCheckResult {
 
 message TaskState {
   string title = 1;
-  int32 currentStep = 2;
-  int32 amountStep = 3;
-  repeated Word answers = 4;
+  string caption = 2;
+  int32 currentStep = 3;
+  int32 amountStep = 4;
+  repeated Word answers = 5;
 }
 
 message TaskResult {
@@ -47,12 +48,12 @@ message TaskHelpResponse {
   string text = 1;
 }
 
-message revertRequest {
+message RevertRequest {
   int32 user_id = 1;
 }
 
 service TaskService {
   rpc check(TaskCheckRequest) returns (TaskCheckResponse) {};
-  rpc revert(revertRequest) returns (TaskState) {};
+  rpc revert(RevertRequest) returns (TaskState) {};
   rpc getTaskExplain(TaskHelpRequest) returns (TaskHelpResponse) {};
 }

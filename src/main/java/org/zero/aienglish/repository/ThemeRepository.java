@@ -13,7 +13,10 @@ import java.util.Optional;
 public interface ThemeRepository extends JpaRepository<Theme, Integer> {
     Optional<Theme> findFirstByTitle(String title);
 
-    Page<Theme> findAllByCategory_Id(Integer categoryId, Pageable pageable);
+    @Query(value = "select count(t.id) from Theme t where t.category.id = ?2 and t.id < ?1")
+    Integer countThemesBefore(Integer themeId, Integer categoryId);
+
+    Page<Theme> findAllByCategory_IdOrderById(Integer categoryId, Pageable pageable);
 
 //    @Cacheable("userThemeRating")
     @Query(value = """

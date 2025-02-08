@@ -21,19 +21,29 @@ public class TaskController extends TaskServiceGrpc.TaskServiceImplBase {
     private final TaskService taskService;
 
     @Override
-    public void revert(Task.revertRequest request, StreamObserver<Task.TaskState> responseObserver) {
+    public void revert(Task.RevertRequest request, StreamObserver<Task.TaskState> responseObserver) {
         var userId = request.getUserId();
 
         var taskState = taskService.revert(userId);
 
-        var answers = taskState.answers().stream()
+        if (taskState.isEmpty()) {
+            var revertResponse = Task.TaskState.newBuilder()
+                    .build();
+
+            responseObserver.onNext(revertResponse);
+            responseObserver.onCompleted();
+            return;
+        }
+
+        var answers = taskState.get().answers().stream()
                 .map(mapToGrpcWord())
                 .toList();
 
         var revertResponse = Task.TaskState.newBuilder()
-                .setTitle(taskState.title())
-                .setAmountStep(taskState.amountSteps())
-                .setCurrentStep(taskState.currentStep())
+                .setCurrentStep(taskState.get().currentStep())
+                .setAmountStep(taskState.get().amountSteps())
+                .setCaption(taskState.get().caption())
+                .setTitle(taskState.get().title())
                 .addAllAnswers(answers)
                 .build();
 
@@ -47,25 +57,26 @@ public class TaskController extends TaskServiceGrpc.TaskServiceImplBase {
 
         var result = taskService.checkTask(userId, request.getAnswer());
 
+        var answers = result.state().answers().stream()
+                .map(mapToGrpcWord())
+                .toList();
+
+
+        var state = Task.TaskState.newBuilder()
+                .setCurrentStep(result.state().currentStep())
+                .setAmountStep(result.state().amountSteps())
+                .setCaption(result.state().caption())
+                .setTitle(result.state().title())
+                .addAllAnswers(answers)
+                .build();
 
         var checkResponse = Task.TaskCheckResponse.newBuilder()
                 .setTaskId(result.taskId())
-                .setChecked(result.checked());
+                .setChecked(result.checked())
+                .setState(state);
 
-        if (!result.checked()) {
-            List<Task.Word> answers = result.state().answers().stream()
-                    .map(mapToGrpcWord())
-                    .toList();
 
-            var state = Task.TaskState.newBuilder()
-                    .setCurrentStep(result.state().currentStep())
-                    .setAmountStep(result.state().amountSteps())
-                    .setTitle(result.state().title())
-                    .addAllAnswers(answers)
-                    .build();
-
-            checkResponse.setState(state);
-        } else {
+        if (result.checked()) {
             var checkResult = Task.TaskCheckResult.newBuilder()
                     .setCorrectAnswer(result.result().correctAnswer())
                     .setUserAnswer(result.result().userAnswer())
@@ -81,7 +92,8 @@ public class TaskController extends TaskServiceGrpc.TaskServiceImplBase {
     }
 
     @Override
-    public void getTaskExplain(Task.TaskHelpRequest request, StreamObserver<Task.TaskHelpResponse> responseObserver) {
+    public void getTaskExplain(Task.TaskHelpRequest
+                                       request, StreamObserver<Task.TaskHelpResponse> responseObserver) {
         var taskId = request.getTaskId();
         var taskExplain = taskService.getTaskTheoryHelp(taskId);
 

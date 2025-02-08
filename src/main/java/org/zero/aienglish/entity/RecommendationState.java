@@ -3,6 +3,7 @@ package org.zero.aienglish.entity;
 import lombok.*;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
+import org.zero.aienglish.model.ThemeDTO;
 
 import java.io.Serializable;
 import java.util.List;
@@ -19,7 +20,7 @@ public class RecommendationState implements Serializable {
     private Integer step;
     private Integer currenThemeId;
     private Integer currentThemeIndex;
-    private List<Integer> selectedThemes;
+    private List<ThemeDTO> selectedThemes;
     private List<Integer> todayThemes;
     @TimeToLive
     private Integer timeToLive;

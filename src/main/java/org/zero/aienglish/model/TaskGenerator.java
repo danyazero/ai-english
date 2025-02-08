@@ -9,7 +9,7 @@ import org.zero.aienglish.repository.StatusRepository;
 public abstract class TaskGenerator {
     abstract public TaskType getTaskName();
     abstract public SentenceTask generateTask(SentenceDTO selectedSentence);
-    abstract public TaskCheckResult checkTask(Integer userId, String result, Sentence sentence);
+    abstract public CheckResultDTO checkTask(Integer userId, String result, Sentence sentence);
 
     protected void saveTaskLog(
             boolean isCorrect,

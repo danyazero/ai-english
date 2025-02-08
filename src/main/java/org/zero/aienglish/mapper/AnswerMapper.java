@@ -12,6 +12,7 @@ public class AnswerMapper {
                 .taskId(task.getTaskId())
                 .taskType(TaskType.valueOf(task.getTaskType()))
                 .answer(task.getTask().getLast())
+                .respondTime(360 - task.getTimeToLive())
                 .build();
     }
 

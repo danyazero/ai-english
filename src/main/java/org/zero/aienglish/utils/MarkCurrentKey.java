@@ -22,8 +22,8 @@ public class MarkCurrentKey implements Function<String, String> {
 
             var extracted = keyPattern.matcher(firstFounded);
             if (extracted.find()) {
-                log.info("In sentence extracted keys");
-                sentence = sentence.replace(firstFounded, "__ <b>" + extracted.group(0) + "</b>");
+                log.info("In sentence extracted keys -> {}", firstFounded);
+                sentence = sentence.replaceFirst(firstFounded, "__ <b>" + extracted.group(0) + "</b>");
             }
         }
 

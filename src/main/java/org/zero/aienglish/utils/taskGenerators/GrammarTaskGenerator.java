@@ -219,7 +219,7 @@ public class GrammarTaskGenerator extends TaskGenerator {
     }
 
     @Override
-    public TaskCheckResult checkTask(Integer userId, String result, Sentence sentence) {
+    public CheckResultDTO checkTask(Integer userId, String result, Sentence sentence) {
 
         result = result.replaceAll(" \\((\\w+)\\)", "");
         var correctAnswer = sentence.getSentence().replaceAll("[*]", "");
@@ -227,13 +227,7 @@ public class GrammarTaskGenerator extends TaskGenerator {
         var checkResult = accuracyCheck.apply(correctAnswer, result);
         this.saveTaskLog(checkResult > 99F, userId, statusRepository, sentenceHistoryRepository);
 
-        var checkResultDTO = getCheckResult(result, correctAnswer, checkResult);
-
-        return TaskCheckResult.builder()
-                .taskId(sentence.getId())
-                .result(checkResultDTO)
-                .checked(true)
-                .build();
+        return getCheckResult(result, correctAnswer, checkResult);
     }
 
     private static CheckResultDTO getCheckResult(String result, String correctAnswer, Float checkResult) {

@@ -17,6 +17,7 @@ import java.util.List;
 public class Task implements Serializable {
     private Integer id;
     private List<String> task;
+    private String translate;
     private Integer taskId;
     private String taskType;
     private Integer amountSteps;

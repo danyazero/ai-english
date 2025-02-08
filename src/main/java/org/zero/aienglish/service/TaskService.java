@@ -3,9 +3,9 @@ package org.zero.aienglish.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.zero.aienglish.entity.RecommendationState;
 import org.zero.aienglish.entity.Task;
 import org.zero.aienglish.exception.RequestException;
+import org.zero.aienglish.exception.SubscriptionExpiredException;
 import org.zero.aienglish.mapper.AnswerMapper;
 import org.zero.aienglish.model.*;
 import org.zero.aienglish.repository.*;
@@ -13,6 +13,7 @@ import org.zero.aienglish.utils.MarkCurrentKey;
 import org.zero.aienglish.utils.MergeOmitPairs;
 import org.zero.aienglish.utils.TaskManager;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public class TaskService {
     private final MergeOmitPairs mergeOmitPairs;
     private final MarkCurrentKey markCurrentKey;
     private final SentenceRepository sentenceRepository;
+    private final SubscriptonRepository subscriptonRepository;
     private final RecommendationRepository recommendationRepository;
 
     private SentenceTask getTask(Integer userId) {
@@ -46,9 +48,10 @@ public class TaskService {
 
         var taskState = Task.builder()
                 .taskType(generatedTask.taskType().name())
-                .task(List.of(generatedTask.pattern()))
-                .taskId(generatedTask.sentenceId())
                 .amountSteps(generatedTask.stepAmount())
+                .task(List.of(generatedTask.pattern()))
+                .translate(generatedTask.caption())
+                .taskId(generatedTask.sentenceId())
                 .answers(generatedTask.answers())
                 .timeToLive(360)
                 .currentStep(0)
@@ -60,25 +63,35 @@ public class TaskService {
         return generatedTask;
     }
 
-    public TaskState revert(Integer userId) {
+    public Optional<TaskState> revert(Integer userId) {
         var taskState = taskRepository.findById(userId);
 
         if (taskState.isEmpty()) {
             log.info("Task state not found for user -> {}", userId);
-            throw new RequestException("Task state not found.");
+
+            return Optional.empty();
         }
-        var updatedCurrentStep = revertState(taskState.get());
 
+
+        if (taskState.get().getTask().size() > 1) {
+            revertState(taskState.get());
+        }
+
+        log.info("After revert current step is -> {}", taskState.get().getCurrentStep());
         var answers = taskState.get().getAnswers().stream()
-                .filter(element -> Objects.equals(element.order(), updatedCurrentStep))
+                .filter(element -> Objects.equals(element.order(), taskState.get().getCurrentStep()))
                 .toList();
+        log.info("Answers for current step is -> {}", answers.size());
 
-        return TaskState.builder()
-                .amountSteps(taskState.get().getAmountSteps())
-                .currentStep(updatedCurrentStep)
-                .title(taskState.get().getTask().getLast())
-                .answers(answers)
-                .build();
+        return Optional.of(
+                TaskState.builder()
+                        .currentStep(taskState.get().getCurrentStep())
+                        .amountSteps(taskState.get().getAmountSteps())
+                        .title(taskState.get().getTask().getLast())
+                        .caption(taskState.get().getTranslate())
+                        .answers(answers)
+                        .build()
+        );
     }
 
     private Integer revertState(Task taskState) {
@@ -134,16 +147,35 @@ public class TaskService {
         if (isLastStep(nextStep, taskState.get())) {
             var taskAnswer = AnswerMapper.map(taskState.get());
 
-            taskRepository.delete(taskState.get());
-            updateRecommendationState(userId);
 
-            return taskManager.checkResult(userId, taskAnswer);
+            updateRecommendationState(userId);
+            var checkResult = taskManager.checkResult(userId, taskAnswer);
+
+            var state = getTaskState(taskState.get(), nextStep);
+            taskRepository.delete(taskState.get());
+
+            return TaskCheckResult.builder()
+                    .taskId(taskState.get().getTaskId())
+                    .result(checkResult)
+                    .checked(true)
+                    .state(state)
+                    .build();
         }
 
-        return getTaskState(taskState.get(), nextStep);
+        var state = getTaskState(taskState.get(), nextStep);
+        taskRepository.save(taskState.get());
+
+
+        return TaskCheckResult.builder()
+                .taskId(taskState.get().getTaskId())
+                .state(state)
+                .checked(false)
+                .build();
+
     }
 
-    private TaskCheckResult getTaskState(Task taskState, int nextStep) {
+    private TaskState getTaskState(Task taskState, int nextStep) {
+        var taskTranslate = taskState.getTranslate();
         var lastTaskState = taskState.getTask().getLast();
         var formattedTaskSentence = getFormattedTaskSentence(lastTaskState);
 
@@ -152,40 +184,41 @@ public class TaskService {
                 nextStep
         );
 
-        var taskStateResponse = TaskState.builder()
-                .title(formattedTaskSentence)
+        return TaskState.builder()
                 .amountSteps(taskState.getAmountSteps())
+                .title(formattedTaskSentence)
+                .caption(taskTranslate)
                 .currentStep(nextStep)
                 .answers(answers)
                 .build();
-
-        taskRepository.save(taskState);
-
-
-        return TaskCheckResult.builder()
-                .taskId(taskState.getTaskId())
-                .state(taskStateResponse)
-                .checked(false)
-                .build();
-    }
+   }
 
     private TaskCheckResult generateTaskForUser(Integer userId) {
+        var isActiveSubscription = subscriptonRepository.findFirstByUser_IdAndValidDueIsAfter(userId, Instant.now());
+        if (isActiveSubscription.isEmpty()) {
+            log.warn("User's subscription with id -> {}, has been expired", userId);
+            throw new SubscriptionExpiredException("Строк дії вашої підписки закінчився.");
+        }
         var generatedTask = getTask(userId);
 
         var formattedTaskTitle = getFormattedTaskSentence(generatedTask.title());
 
+
+        log.info("Generated task answers -> {}", generatedTask.answers());
         var answers = getAnswersForStep(generatedTask.answers(), 0);
+        log.info("Generated task answers for step 0 -> {}", answers);
 
         var state = TaskState.builder()
-                .title(formattedTaskTitle)
                 .currentStep(generatedTask.currentStep())
                 .amountSteps(generatedTask.stepAmount())
+                .caption(generatedTask.caption())
+                .title(formattedTaskTitle)
                 .answers(answers)
                 .build();
 
         return TaskCheckResult.builder()
-                .checked(false)
                 .taskId(generatedTask.sentenceId())
+                .checked(false)
                 .state(state)
                 .build();
     }
