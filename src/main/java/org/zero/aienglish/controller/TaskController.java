@@ -94,7 +94,7 @@ public class TaskController extends TaskServiceGrpc.TaskServiceImplBase {
     @Override
     public void getTaskExplain(Task.TaskHelpRequest
                                        request, StreamObserver<Task.TaskHelpResponse> responseObserver) {
-        var taskId = request.getTaskId();
+        var taskId = request.getUserId();
         var taskExplain = taskService.getTaskTheoryHelp(taskId);
 
         var explainResponse = Task.TaskHelpResponse.newBuilder()

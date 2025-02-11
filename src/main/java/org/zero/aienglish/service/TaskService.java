@@ -30,6 +30,7 @@ public class TaskService {
     private final SentenceRepository sentenceRepository;
     private final SubscriptonRepository subscriptonRepository;
     private final RecommendationRepository recommendationRepository;
+    private final SentenceHistoryRepository sentenceHistoryRepository;
 
     private SentenceTask getTask(Integer userId) {
         var taskTheme = themeService.getCurrentThemeForUser(userId);
@@ -114,10 +115,11 @@ public class TaskService {
         );
     }
 
-    public String getTaskTheoryHelp(Integer taskId) {
-        var taskSentence = sentenceRepository.findById(taskId);
+    public String getTaskTheoryHelp(Integer userId) {
+        var currentTask = getCurrentTaskForTheory(userId);
+        var taskSentence = sentenceRepository.findById(currentTask);
         if (taskSentence.isEmpty()) {
-            log.warn("Sentence for task not found for taskId -> {}", taskId);
+            log.warn("Sentence for task not found for taskId -> {}", currentTask);
             throw new RequestException("Sentence for task not found.");
         }
 
@@ -130,6 +132,21 @@ public class TaskService {
                 taskSentence.get().getTheme().getCaption(),
                 taskSentence.get().getExplanation()
         );
+    }
+
+    private Integer getCurrentTaskForTheory(Integer userId) {
+        var state = taskRepository.findById(userId);
+        if (state.isPresent()) {
+            return state.get().getId();
+        }
+
+        var lastAnsweredTask = sentenceHistoryRepository.findByUser_IdOrderByAtAsc(userId);
+        if (lastAnsweredTask.isEmpty()) {
+            log.warn("Last answered task not found for user -> {}", userId);
+            throw new RequestException("Last answered task not found.");
+        }
+
+        return lastAnsweredTask.get().getSentence().getId();
     }
 
 

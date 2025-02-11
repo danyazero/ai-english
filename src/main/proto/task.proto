@@ -41,7 +41,7 @@ message TaskResult {
 }
 
 message TaskHelpRequest {
-  int32 task_id = 1;
+  int32 user_id = 1;
 }
 
 message TaskHelpResponse {

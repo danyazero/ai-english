@@ -49,6 +49,7 @@ public class UserService {
         var checkout = Checkout.builder()
                 .subscriptionPlan(freeSubscriptionPlan)
                 .user(createdUser)
+                .price(freeSubscriptionPlan.getPrice())
                 .build();
 
         var savedCheckout = checkoutRepository.save(checkout);

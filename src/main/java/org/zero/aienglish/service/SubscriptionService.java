@@ -40,7 +40,7 @@ public class SubscriptionService {
     }
 
     private Optional<UserSubscription> getUserSubscription(Integer userId) {
-        var subscription = subscriptionRepository.findFirstByUserId(userId);
+        var subscription = subscriptionRepository.findFirstByActualSubscriptions(userId);
 
         if (subscription.isEmpty()) {
             log.info("User dont have subscription.");
@@ -48,6 +48,6 @@ public class SubscriptionService {
             return Optional.empty();
         }
 
-        return Optional.of(SubscriptionMapper.map(subscription.get()));
+        return Optional.of(SubscriptionMapper.map(subscription));
     }
 }

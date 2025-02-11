@@ -15,17 +15,16 @@ import org.zero.aienglish.entity.Subscription;
 import org.zero.aienglish.exception.PaymentGenerationException;
 import org.zero.aienglish.mapper.SubscriptionMapper;
 import org.zero.aienglish.model.CheckoutDTO;
+import org.zero.aienglish.model.NotificationDTO;
 import org.zero.aienglish.model.PaymentCallback;
 import org.zero.aienglish.model.PaymentSignature;
 import org.zero.aienglish.repository.*;
-import org.zero.aienglish.utils.Base64Decoder;
-import org.zero.aienglish.utils.Deserializer;
-import org.zero.aienglish.utils.PaymentSignatureVerification;
-import org.zero.aienglish.utils.SignPayment;
+import org.zero.aienglish.utils.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -36,10 +35,11 @@ public class PaymentService {
     private final Base64Decoder base64Decoder;
     private final UserRepository userRepository;
     private final CheckoutRepository checkoutRepository;
+    private final NotificationService notificationService;
     private final SubscriptonRepository subscriptonRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final PaymentSignatureVerification paymentSignatureVerification;
-    private final SubscriptionRepository subscriptionRepository;
 
     @Value("${app.liqpay.serverUrl}")
     private String serverLink;
@@ -73,6 +73,7 @@ public class PaymentService {
 
         var generateCheckout = Checkout.builder()
                 .subscriptionPlan(foundedPlan.get())
+                .price(foundedPlan.get().getPrice())
                 .user(user.get())
                 .build();
         var savedCheckout = checkoutRepository.save(generateCheckout);
@@ -120,32 +121,37 @@ public class PaymentService {
         var decodedData = base64Decoder.apply(paymentSignature.data());
         if (decodedData.isEmpty()) {
             log.warn("Error decoding payment status data from base64");
+
             return;
         }
 
         var deserializedData = Deserializer.apply(decodedData.get(), PaymentCallback.class);
         log.info("Subscription update data -> {}", deserializedData);
 
+        UUID transactionCheckoutId = UUID.fromString(deserializedData.orderId());
+        var checkout = checkoutRepository.findById(transactionCheckoutId);
+        if (checkout.isEmpty()) {
+            log.warn("Error update subscription status, subscription not found");
+            throw new PaymentGenerationException("Checkout not found");
+        }
+
+
+        log.info(deserializedData.status());
         if (deserializedData.status().equals("success")) {
             log.info("Successful payment with id -> {}", deserializedData.orderId());
-            UUID transactionCheckoutId = UUID.fromString(deserializedData.orderId());
-            var checkout = checkoutRepository.findById(transactionCheckoutId);
-            if (checkout.isEmpty()) {
-                log.warn("Error update subscription status, subscription not found");
-                throw new PaymentGenerationException("Checkout not found");
-            }
 
             var startDate = Instant.now();
 
-            var actualSubscription = subscriptionRepository.findFirstByUserId(checkout.get().getUser().getId());
+            var actualSubscription = subscriptionRepository.findFirstByUserIdOrderByAtDesc(checkout.get().getUser().getId());
             if (actualSubscription.isPresent()) {
                 startDate = actualSubscription.get().getValidDue();
             }
 
             var validDueTo = startDate.plus(checkout.get().getSubscriptionPlan().getDurationDays(), ChronoUnit.DAYS);
+            var subscriptionStartDate = getSubscriptionStartDate(actualSubscription);
 
             var subscription = Subscription.builder()
-                    .at(Instant.now())
+                    .at(subscriptionStartDate)
                     .user(checkout.get().getUser())
                     .validDue(validDueTo)
                     .checkout(checkout.get())
@@ -153,9 +159,25 @@ public class PaymentService {
                     .build();
             subscriptonRepository.save(subscription);
 
-            actualSubscription.ifPresent(subscriptonRepository::delete);
+            var notification = NotificationDTO.builder()
+                    .recipientId(checkout.get().getUser().getId())
+                    .message("<b>✅ Оплата успішно виконана!</b>\n\nВаша підписка активована до " + FormatDate.format(validDueTo) + ".")
+                    .build();
+
+            notificationService.sendNotification(notification);
 
             log.info("Subscription successful. Valid due to -> {}", validDueTo);
+        } else if (deserializedData.status().equals("failure") || deserializedData.status().equals("error")) {
+            var notification = NotificationDTO.builder()
+                    .recipientId(checkout.get().getUser().getId())
+                    .message("<b>\uD83E\uDDE8 На жаль, оплата не пройшла.</b> Будь ласка, перевірте баланс картки або спробуйте інший спосіб оплати.")
+                    .build();
+
+            notificationService.sendNotification(notification);
         }
+    }
+
+    private static Instant getSubscriptionStartDate(Optional<Subscription> actualSubscription) {
+        return actualSubscription.isPresent() ? actualSubscription.get().getValidDue() : Instant.now();
     }
 }

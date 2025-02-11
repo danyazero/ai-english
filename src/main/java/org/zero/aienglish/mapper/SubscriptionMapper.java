@@ -1,5 +1,6 @@
 package org.zero.aienglish.mapper;
 
+import lombok.extern.slf4j.Slf4j;
 import org.zero.aienglish.entity.Subscription;
 import org.zero.aienglish.model.SubscriptionPlan;
 import org.zero.aienglish.model.UserSubscription;
@@ -9,7 +10,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.List;
 
+@Slf4j
 public class SubscriptionMapper {
     public static SubscriptionPlan map(org.zero.aienglish.entity.SubscriptionPlan element) {
         return SubscriptionPlan.builder()
@@ -39,20 +43,39 @@ public class SubscriptionMapper {
                 .build();
     }
 
-    public static UserSubscription map(Subscription subscription) {
+    public static UserSubscription map(List<Subscription> subscription) {
         var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
                 .withZone(ZoneId.systemDefault());
 
-        var formattedStartDate = formatter.format(subscription.getAt());
-        var formattedEndDate = formatter.format(subscription.getValidDue());
-        var daysRemain = ChronoUnit.DAYS.between(Instant.now(), subscription.getValidDue());
+        var startDate = subscription.stream()
+                .min(Comparator.comparing(Subscription::getAt));
+
+        if (startDate.isEmpty()) {
+            log.warn("Minimal start date is empty");
+            throw new IllegalArgumentException("Minimal start date is empty");
+        }
+
+        var endDate = subscription.stream()
+                .max(Comparator.comparing(Subscription::getValidDue));
+
+        var formattedStartDate = formatter.format(startDate.get().getAt());
+        var formattedEndDate = formatter.format(endDate.get().getValidDue());
+        var daysRemain = ChronoUnit.DAYS.between(Instant.now(), endDate.get().getValidDue());
+
+        double amountPrice = subscription.stream()
+                .mapToDouble(element -> element.getCheckout().getPrice())
+                .sum();
 
         return UserSubscription.builder()
-                .planName(subscription.getSubscriptionPlan().getName())
+                .planName(getPlanName(subscription))
                 .start_date(formattedStartDate)
                 .end_date(formattedEndDate)
                 .remainDays((int) daysRemain)
-                .price(subscription.getSubscriptionPlan().getPrice())
+                .price(amountPrice)
                 .build();
+    }
+
+    private static String getPlanName(List<Subscription> subscription) {
+        return subscription.size() > 1 ? "Декілька (" + subscription.size() + ")" : subscription.getFirst().getSubscriptionPlan().getName();
     }
 }
