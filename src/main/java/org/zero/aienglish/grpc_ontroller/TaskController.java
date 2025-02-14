@@ -1,4 +1,4 @@
-package org.zero.aienglish.controller;
+package org.zero.aienglish.grpc_ontroller;
 
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -6,11 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.zero.aienglish.lib.grpc.Task;
 import org.zero.aienglish.lib.grpc.TaskServiceGrpc;
-import org.zero.aienglish.model.TaskResultDTO;
 import org.zero.aienglish.model.TaskAnswer;
 import org.zero.aienglish.service.TaskService;
 
-import java.util.List;
 import java.util.function.Function;
 
 

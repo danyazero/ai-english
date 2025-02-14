@@ -20,6 +20,7 @@ import org.zero.aienglish.repository.ThemeRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -38,6 +39,7 @@ public class ThemeService {
         var categories = themeCategoryRepository.findAll().stream()
                 .map(mapThemeCategoryToThemeDTO())
                 .toList();
+
         var page = Pagination.<ThemeDTO>builder()
                 .items(categories)
                 .currentPage(0)
@@ -49,6 +51,7 @@ public class ThemeService {
             log.warn("Saved Themes for user with id -> {}, not found", userId);
             return Themes.builder()
                     .recommendations(page)
+                    .saved(List.of())
                     .build();
         }
 
@@ -58,10 +61,14 @@ public class ThemeService {
                 .build();
     }
 
-    public Themes selectTheme(Integer userId, Integer themeId) {
+    public Optional<Themes> selectTheme(Integer userId, Integer themeId) {
         var foundedState = recommendationRepository.findById(userId);
         if (foundedState.isEmpty()) {
             foundedState = Optional.of(initTodayRecommendationState(userId));
+        }
+
+        if (isAlreadyExist(themeId, foundedState)) {
+            return Optional.empty();
         }
 
         var foundedTheme = themeRepository.findById(themeId);
@@ -82,10 +89,18 @@ public class ThemeService {
 
         var page = getThemeForCategory(userId, foundedTheme.get().getCategory().getId(), calculatedPage);
 
-        return Themes.builder()
-                .recommendations(page)
-                .saved(foundedState.get().getSelectedThemes())
-                .build();
+        return Optional.of(
+                Themes.builder()
+                        .recommendations(page)
+                        .saved(foundedState.get().getSelectedThemes())
+                        .build()
+        );
+    }
+
+    private static boolean isAlreadyExist(Integer themeId, Optional<RecommendationState> foundedState) {
+        return foundedState.isPresent()
+               && foundedState.get().getSelectedThemes() != null
+               && foundedState.get().getSelectedThemes().stream().anyMatch(element -> Objects.equals(element.id(), themeId));
     }
 
     public void clearTheme(Integer userId) {

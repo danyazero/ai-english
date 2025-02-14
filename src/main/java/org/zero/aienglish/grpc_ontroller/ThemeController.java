@@ -1,4 +1,4 @@
-package org.zero.aienglish.controller;
+package org.zero.aienglish.grpc_ontroller;
 
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
@@ -24,18 +24,18 @@ public class ThemeController extends ThemeServiceGrpc.ThemeServiceImplBase {
 
         var relyThemes = themeService.selectTheme(userId, themeId);
 
-        var mappedRecommendedThemes = relyThemes.recommendations().items().stream()
+        var mappedRecommendedThemes = relyThemes.get().recommendations().items().stream()
                 .map(ThemeMapper::map)
                 .toList();
 
         var themesResponse = ThemeOuterClass.ThemesResponse.newBuilder()
-                .setCurrentPage(relyThemes.recommendations().currentPage())
-                .setTotalPages(relyThemes.recommendations().totalPages())
+                .setCurrentPage(relyThemes.get().recommendations().currentPage())
+                .setTotalPages(relyThemes.get().recommendations().totalPages())
                 .addAllThemes(mappedRecommendedThemes)
                 .build();
 
 
-        var mappedSavedThemes = relyThemes.saved().stream()
+        var mappedSavedThemes = relyThemes.get().saved().stream()
                 .map(ThemeMapper::map)
                 .toList();
 

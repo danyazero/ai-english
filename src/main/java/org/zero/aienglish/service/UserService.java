@@ -9,14 +9,12 @@ import org.zero.aienglish.entity.Subscription;
 import org.zero.aienglish.entity.User;
 import org.zero.aienglish.exception.RequestException;
 import org.zero.aienglish.model.UserDTO;
-import org.zero.aienglish.repository.CheckoutRepository;
-import org.zero.aienglish.repository.SubscriptionPlanRepository;
-import org.zero.aienglish.repository.SubscriptonRepository;
-import org.zero.aienglish.repository.UserRepository;
+import org.zero.aienglish.model.UserStatistic;
+import org.zero.aienglish.repository.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAmount;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -25,17 +23,41 @@ public class UserService {
     private final UserRepository userRepository;
     private final CheckoutRepository checkoutRepository;
     private final SubscriptonRepository subscriptonRepository;
+    private final SentenceHistoryRepository sentenceHistoryRepository;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
 
+    public UserStatistic getUserStatistic(Integer userId) {
+        var userTodayStatistic = sentenceHistoryRepository.getUserTodayStatistic(userId);
+        var daysStreak = sentenceHistoryRepository.getDaysStreakWithDaySpentTime(userId, 60);
+
+        return UserStatistic.builder()
+                .daysStreak(daysStreak)
+                .todaySpentTime((userTodayStatistic.getSpentTime() / 60) + ":" + (userTodayStatistic.getSpentTime() % 60))
+                .todayAcceptedPercentage(userTodayStatistic.getAcceptedPercentage())
+                .build();
+    }
+
+    public Optional<Long> getUserTelegramId(Integer userId) {
+        var foundedUser = userRepository.findById(userId);
+        if (foundedUser.isEmpty()) {
+            log.warn("User not found with id -> {}", userId);
+            return Optional.empty();
+        }
+
+        return Optional.of(foundedUser.get().getTelegramUserId());
+    }
+
     @Transactional
-    public Integer createUser(UserDTO user) {
-        var founded = userRepository.findFirstByUsername(user.username());
+    public Integer getUserIdIfExistOrElseCreate(UserDTO user) {
+        log.info("User -> {}", user);
+        var founded = userRepository.findFirstByTelegramUserId(user.telegramId());
         if (founded.isPresent()) {
             log.warn("User already exist with id -> {}", founded.get().getId());
             return founded.get().getId();
         }
 
         var newUser = User.builder()
+                .telegramUserId(user.telegramId())
                 .username(user.username())
                 .role("USER")
                 .build();

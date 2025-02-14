@@ -24,7 +24,7 @@ public class SubscriptionService {
         var userSubscription = getUserSubscription(userId);
 
         var availablePaidSubscriptionPlans = subscriptionPlanRepository.findAllPaidPlans().stream()
-                .map(SubscriptionMapper::map)
+                .map(SubscriptionMapper::mapToGrpc)
                 .toList();
 
         log.info("Available paid plans successfully extracted -> {}", availablePaidSubscriptionPlans.size());
@@ -48,6 +48,6 @@ public class SubscriptionService {
             return Optional.empty();
         }
 
-        return Optional.of(SubscriptionMapper.map(subscription));
+        return Optional.of(SubscriptionMapper.mapToGrpc(subscription));
     }
 }

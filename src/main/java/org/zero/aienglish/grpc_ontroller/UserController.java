@@ -1,4 +1,4 @@
-package org.zero.aienglish.controller;
+package org.zero.aienglish.grpc_ontroller;
 
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +17,11 @@ public class UserController extends UserServiceGrpc.UserServiceImplBase {
     public void createUser(User.CreateUserRequest request, StreamObserver<User.UserResponse> responseObserver) {
         var username = request.getUsername();
 
-        var userDTO = new UserDTO(username);
-        var user = userService.createUser(userDTO);
+        var userDTO = UserDTO.builder()
+                .username(username)
+                .telegramId(0L)
+                .build();
+        var user = userService.getUserIdIfExistOrElseCreate(userDTO);
 
         var userResponse = User.UserResponse.newBuilder()
                 .setUserId(user)
@@ -32,7 +35,10 @@ public class UserController extends UserServiceGrpc.UserServiceImplBase {
         var username = request.getUsername();
         var userId = request.getUserId();
 
-        var userDTO = new UserDTO(username);
+        var userDTO = UserDTO.builder()
+                .username(username)
+                .telegramId(0L)
+                .build();
         var user = userService.updateUser(userId, userDTO);
 
         var userResponse = User.UserResponse.newBuilder()

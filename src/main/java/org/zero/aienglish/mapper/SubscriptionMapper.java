@@ -2,9 +2,7 @@ package org.zero.aienglish.mapper;
 
 import lombok.extern.slf4j.Slf4j;
 import org.zero.aienglish.entity.Subscription;
-import org.zero.aienglish.model.SubscriptionPlan;
-import org.zero.aienglish.model.UserSubscription;
-import org.zero.aienglish.model.UserSubscriptionDetails;
+import org.zero.aienglish.model.*;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -15,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 public class SubscriptionMapper {
-    public static SubscriptionPlan map(org.zero.aienglish.entity.SubscriptionPlan element) {
+    public static SubscriptionPlan mapToGrpc(org.zero.aienglish.entity.SubscriptionPlan element) {
         return SubscriptionPlan.builder()
                 .id(element.getId())
                 .durationDays(element.getDurationDays())
@@ -24,7 +22,7 @@ public class SubscriptionMapper {
                 .build();
     }
 
-    public static org.zero.aienglish.lib.grpc.Subscription.SubscriptionPlan map(SubscriptionPlan element) {
+    public static org.zero.aienglish.lib.grpc.Subscription.SubscriptionPlan mapToGrpc(SubscriptionPlan element) {
         return org.zero.aienglish.lib.grpc.Subscription.SubscriptionPlan.newBuilder()
                 .setId(element.id())
                 .setName(element.name())
@@ -33,7 +31,14 @@ public class SubscriptionMapper {
                 .build();
     }
 
-    public static org.zero.aienglish.lib.grpc.Subscription.UserSubscriptionPlan map(UserSubscription userSubscription) {
+    public static TelegramCallbackButton map(SubscriptionPlan plan) {
+        return TelegramCallbackButton.builder()
+                .text(plan.name() + " • " + plan.price() + "UAH")
+                .callback(TelegramCallbackEnum.PLAN_CHECKOUT.name() + " " + plan.id())
+                .build();
+    }
+
+    public static org.zero.aienglish.lib.grpc.Subscription.UserSubscriptionPlan mapToGrpc(UserSubscription userSubscription) {
         return org.zero.aienglish.lib.grpc.Subscription.UserSubscriptionPlan.newBuilder()
                 .setRemainDays(userSubscription.remainDays())
                 .setStartDate(userSubscription.start_date())
@@ -43,7 +48,7 @@ public class SubscriptionMapper {
                 .build();
     }
 
-    public static UserSubscription map(List<Subscription> subscription) {
+    public static UserSubscription mapToGrpc(List<Subscription> subscription) {
         var formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
                 .withZone(ZoneId.systemDefault());
 

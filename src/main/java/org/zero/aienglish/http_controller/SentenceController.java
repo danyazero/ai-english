@@ -1,4 +1,4 @@
-package org.zero.aienglish.controller;
+package org.zero.aienglish.http_controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

@@ -4,8 +4,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.zero.aienglish.controller.TaskController;
+import org.zero.aienglish.grpc_ontroller.TaskController;
 
 import java.io.IOException;
 

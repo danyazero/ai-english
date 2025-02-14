@@ -1,6 +1,5 @@
-package org.zero.aienglish.controller;
+package org.zero.aienglish.grpc_ontroller;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.zero.aienglish.model.ThemeSchemeDTO;

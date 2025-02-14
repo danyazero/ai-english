@@ -1,4 +1,4 @@
-package org.zero.aienglish.controller;
+package org.zero.aienglish.grpc_ontroller;
 
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +22,14 @@ public class SubscriptionController extends SubscriptionServiceImplBase {
         var userSubscriptionDetails = subscriptionService.getUserSubscriptionDetails(userId);
 
         var userAvailablePlans = userSubscriptionDetails.availablePlans().stream()
-                .map(SubscriptionMapper::map)
+                .map(SubscriptionMapper::mapToGrpc)
                 .toList();
 
         var response = Subscription.UserSubscriptionPlanResponse.newBuilder()
                 .addAllAvailablePlans(userAvailablePlans);
 
         if (userSubscriptionDetails.userSubscription().isPresent()) {
-            var userSubscription = SubscriptionMapper.map(userSubscriptionDetails.userSubscription().get());
+            var userSubscription = SubscriptionMapper.mapToGrpc(userSubscriptionDetails.userSubscription().get());
             response.setUserSubscription(userSubscription);
         }
 

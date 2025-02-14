@@ -84,18 +84,20 @@ public class TaskService {
                 .toList();
         log.info("Answers for current step is -> {}", answers.size());
 
+        var formattedTaskSentence = getFormattedTaskSentence(taskState.get().getTask().getLast());
+
         return Optional.of(
                 TaskState.builder()
                         .currentStep(taskState.get().getCurrentStep())
                         .amountSteps(taskState.get().getAmountSteps())
-                        .title(taskState.get().getTask().getLast())
+                        .title(formattedTaskSentence)
                         .caption(taskState.get().getTranslate())
                         .answers(answers)
                         .build()
         );
     }
 
-    private Integer revertState(Task taskState) {
+    private void revertState(Task taskState) {
         var taskList = taskState.getTask();
         taskList.removeLast();
 
@@ -103,9 +105,6 @@ public class TaskService {
         int updatedCurrentStep = taskState.getCurrentStep() - 1;
         taskState.setCurrentStep(updatedCurrentStep);
         taskRepository.save(taskState);
-
-
-        return updatedCurrentStep;
     }
 
 
@@ -140,7 +139,7 @@ public class TaskService {
             return state.get().getId();
         }
 
-        var lastAnsweredTask = sentenceHistoryRepository.findByUser_IdOrderByAtAsc(userId);
+        var lastAnsweredTask = sentenceHistoryRepository.findFirstByUser_IdOrderByAtAsc(userId);
         if (lastAnsweredTask.isEmpty()) {
             log.warn("Last answered task not found for user -> {}", userId);
             throw new RequestException("Last answered task not found.");

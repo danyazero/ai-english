@@ -22,7 +22,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SentenceService {
     private final TitleCaseWord titleCaseWord;
-    private final SentenceMapper sentenceMapper;
     private final ThemeRepository themeRepository;
     private final SentenceRepository sentenceRepository;
     private final VocabularyRepository vocabularyRepository;
@@ -36,7 +35,7 @@ public class SentenceService {
         isSentenceAlreadyExists(sentence);
 
         var theme = getThemeIfExist(sentence.sentenceTheme());
-        var mappedSentence = sentenceMapper.map(sentence);
+        var mappedSentence = SentenceMapper.map(sentence);
         mappedSentence.setTheme(theme);
 
         var sentenceSaved = sentenceRepository.save(mappedSentence);

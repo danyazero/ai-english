@@ -31,6 +31,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class PaymentService {
+    private final DayTitle dayTitle;
     private final SignPayment signPayment;
     private final Base64Decoder base64Decoder;
     private final UserRepository userRepository;
@@ -86,7 +87,11 @@ public class PaymentService {
         request.put("currency", "UAH");
         request.put("order_id", savedCheckout.getId().toString());
         request.put("amount", String.valueOf(foundedPlan.get().getPrice()));
-        request.put("description", "Оплата підписки на телеграм бота - " + botName + ". (" + foundedPlan.get().getDurationDays() + " дн.)");
+
+        var subscriptionStartDate = getSubscriptionStartDate(userId);
+        var validDueDate = getSubscriptionValidDue(subscriptionStartDate, savedCheckout);
+
+        request.put("description",  botName + " - Підписка на " + dayTitle.apply(foundedPlan.get().getDurationDays()) + " (" + FormatDate.format(validDueDate) + ")");
 
 
         request.put("server_url", appURL);
@@ -106,8 +111,9 @@ public class PaymentService {
         }
 
         return CheckoutDTO.builder()
-                .subscriptionPlan(SubscriptionMapper.map(foundedPlan.get()))
+                .subscriptionPlan(SubscriptionMapper.mapToGrpc(foundedPlan.get()))
                 .checkoutLink(locationValue.getFirst())
+                .validDue(validDueDate)
                 .build();
     }
 
@@ -140,15 +146,10 @@ public class PaymentService {
         if (deserializedData.status().equals("success")) {
             log.info("Successful payment with id -> {}", deserializedData.orderId());
 
-            var startDate = Instant.now();
 
-            var actualSubscription = subscriptionRepository.findFirstByUserIdOrderByAtDesc(checkout.get().getUser().getId());
-            if (actualSubscription.isPresent()) {
-                startDate = actualSubscription.get().getValidDue();
-            }
 
-            var validDueTo = startDate.plus(checkout.get().getSubscriptionPlan().getDurationDays(), ChronoUnit.DAYS);
-            var subscriptionStartDate = getSubscriptionStartDate(actualSubscription);
+            var subscriptionStartDate = getSubscriptionStartDate(checkout.get().getUser().getId());
+            var validDueTo = getSubscriptionValidDue(subscriptionStartDate, checkout.get());
 
             var subscription = Subscription.builder()
                     .at(subscriptionStartDate)
@@ -177,7 +178,13 @@ public class PaymentService {
         }
     }
 
-    private static Instant getSubscriptionStartDate(Optional<Subscription> actualSubscription) {
-        return actualSubscription.isPresent() ? actualSubscription.get().getValidDue() : Instant.now();
+    private static Instant getSubscriptionValidDue(Instant subscriptionStartDate, Checkout checkout) {
+        return subscriptionStartDate.plus(checkout.getSubscriptionPlan().getDurationDays(), ChronoUnit.DAYS);
+    }
+
+    private Instant getSubscriptionStartDate(Integer userId) {
+        var lastActualSubscription = subscriptionRepository.findFirstByUserIdOrderByAtDesc(userId);
+
+        return lastActualSubscription.isPresent() ? lastActualSubscription.get().getValidDue() : Instant.now();
     }
 }

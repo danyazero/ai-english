@@ -29,4 +29,11 @@ public class Theme {
     @JoinColumn(name = "category_id")
     private ThemeCategory category;
 
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" +
+               "id = " + id + ", " +
+               "caption = " + caption + ", " +
+               "title = " + title + ")";
+    }
 }
